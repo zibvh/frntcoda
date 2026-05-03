@@ -638,7 +638,7 @@
   }
   .cert-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 320px;
     gap: 4rem;
     align-items: center;
     margin-top: 3rem;
@@ -696,11 +696,13 @@
 
   /* CERT CARD VISUAL */
   .cert-visual {
-    position: relative;
+    width: 320px;
+    height: 200px;
+    flex-shrink: 0;
+    flex-grow: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: visible;
   }
   .cert-card {
     background: #ffffff;
@@ -709,15 +711,14 @@
     padding: 0;
     position: relative;
     overflow: hidden;
-    width: 320px !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
-    height: 200px !important;
-    min-height: 200px !important;
-    max-height: 200px !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-    align-self: center !important;
+    width: 320px;
+    height: 200px;
+    min-width: 320px;
+    max-width: 320px;
+    min-height: 200px;
+    max-height: 200px;
+    flex-shrink: 0;
+    flex-grow: 0;
     box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     transform: rotate(-0.5deg);
     display: flex;
@@ -1028,7 +1029,7 @@
   /* RESPONSIVE */
   @media (max-width: 1024px) {
     .hero-code { display: none; }
-    .cert-layout { grid-template-columns: 1fr; }
+    /* cert-layout stays fixed */
     .footer-grid { grid-template-columns: 1fr 1fr; }
   }
 
@@ -1133,7 +1134,7 @@
 
     /* Certificate */
     .cert-section { padding: 60px 4%; }
-    .cert-layout { grid-template-columns: 1fr; gap: 2rem; }
+    /* cert-layout stays fixed — no responsive override */
     .cert-fee-grid { grid-template-columns: 1fr; gap: .75rem; }
     .cert-preview { padding: 1.5rem; }
 
@@ -1405,7 +1406,7 @@
     </div>
 
     <div class="cert-visual reveal">
-      <div class="cert-card">
+      <div class="cert-card" style="width:320px!important;height:200px!important;min-width:320px!important;max-width:320px!important;min-height:200px!important;max-height:200px!important;flex-shrink:0!important;flex-grow:0!important;">
         <!-- Corner brackets -->
         <div class="cert-corner cert-corner-tl"></div>
         <div class="cert-corner cert-corner-tr"></div>
@@ -1553,28 +1554,23 @@
 
 <script>
   // ── CERT SIZE DEBUG ──────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
-    const card = document.querySelector('.cert-card');
-    if (!card) { console.warn('[frNtcOda] cert-card: element not found'); return; }
-    const r = card.getBoundingClientRect();
-    console.log('[frNtcOda] cert-card rendered size →', Math.round(r.width) + 'px × ' + Math.round(r.height) + 'px');
-    console.log('[frNtcOda] cert-card computed style →', {
-      width:     getComputedStyle(card).width,
-      height:    getComputedStyle(card).height,
-      minWidth:  getComputedStyle(card).minWidth,
-      maxWidth:  getComputedStyle(card).maxWidth,
-      flexGrow:  getComputedStyle(card).flexGrow,
-      flexShrink:getComputedStyle(card).flexShrink,
-      alignSelf: getComputedStyle(card).alignSelf,
-    });
-    const expected = { w: 320, h: 200 };
-    if (Math.round(r.width) !== expected.w || Math.round(r.height) !== expected.h) {
-      console.warn('[frNtcOda] cert-card size MISMATCH — expected ' + expected.w + '×' + expected.h + 'px, got ' + Math.round(r.width) + '×' + Math.round(r.height) + 'px');
+  document.addEventListener('DOMContentLoaded', function() {
+    var card = document.querySelector('.cert-card');
+    if (!card) { console.warn('[frNtcOda:index] cert-card not found in DOM'); return; }
+    var r = card.getBoundingClientRect();
+    var cs = getComputedStyle(card);
+    console.log('[frNtcOda:index] cert-card rendered:', Math.round(r.width) + 'x' + Math.round(r.height) + 'px');
+    console.log('[frNtcOda:index] cert-card computed width:', cs.width, '| height:', cs.height, '| minW:', cs.minWidth, '| maxW:', cs.maxWidth);
+    console.log('[frNtcOda:index] cert-card parent (.cert-visual) rendered:', Math.round(card.parentElement.getBoundingClientRect().width) + 'x' + Math.round(card.parentElement.getBoundingClientRect().height) + 'px');
+    if (Math.round(r.width) === 320 && Math.round(r.height) === 200) {
+      console.log('[frNtcOda:index] cert-card size OK ✓ (320x200)');
     } else {
-      console.log('[frNtcOda] cert-card size OK ✓');
+      console.error('[frNtcOda:index] cert-card size WRONG — expected 320x200, got ' + Math.round(r.width) + 'x' + Math.round(r.height));
     }
   });
+</script>
 
+<script>
   // Hamburger menu
   function toggleMobileNav() {
     const nav = document.getElementById('mobile-nav');
