@@ -319,11 +319,12 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 /* ── CERTIFICATE CARD ── */
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;700;900&display=swap');
 
-.cert-wrapper{width:100%;display:flex;justify-content:center;margin:0 auto 1.5rem;}
+.cert-wrapper{display:flex;justify-content:center;margin:0 auto 1.5rem;}
 .cert-card{
   background:#fffef9;border:1px solid #c9b87c;border-radius:3px;
   position:relative;overflow:hidden;
-  width:340px;height:210px;
+  width:320px!important;height:200px!important;
+  max-width:320px!important;
   flex-shrink:0;
   box-shadow:0 6px 32px rgba(0,0,0,.18);
 }
@@ -352,7 +353,7 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 .cert-watermark{
   position:absolute;inset:0;
   display:flex;align-items:center;justify-content:center;
-  font-family:'Playfair Display',serif;font-size:4.5em;font-weight:900;
+  font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;
   color:rgba(201,168,76,.04);letter-spacing:-.05em;
   pointer-events:none;transform:rotate(-15deg);z-index:0;white-space:nowrap;
 }
@@ -365,33 +366,33 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 }
 
 .cert-title-main{
-  font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:900;
+  font-family:'Playfair Display',serif;font-size:0.82rem;font-weight:900;
   color:#1a1208;letter-spacing:.1em;text-transform:uppercase;
   text-shadow:0 1px 0 rgba(201,168,76,.25);
 }
 .cert-sub-title{
   font-family:'Playfair Display',serif;font-style:italic;
-  font-size:0.5rem;color:#7a6020;margin-bottom:.8em;
+  font-size:0.46rem;color:#7a6020;margin-bottom:.6em;
 }
 
-.cert-subtitle-bar{display:flex;align-items:center;gap:.6em;width:50%;margin-bottom:.4em;}
+.cert-subtitle-bar{display:flex;align-items:center;gap:.6em;width:50%;margin-bottom:.3em;}
 .cert-subtitle-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);}
 .cert-subtitle-text{
-  font-family:'DM Mono',monospace;font-size:0.42rem;
+  font-family:'DM Mono',monospace;font-size:0.38rem;
   letter-spacing:.2em;text-transform:uppercase;
   color:#a08040;white-space:nowrap;
 }
 
 .cert-recipient-name{
-  font-family:'Dancing Script',cursive;font-size:1.5rem;font-weight:700;
-  color:#1a1208;line-height:1.2;margin-bottom:.2em;word-break:break-word;
+  font-family:'Dancing Script',cursive;font-size:1.35rem;font-weight:700;
+  color:#1a1208;line-height:1.15;margin-bottom:.15em;word-break:break-word;
 }
 
-.cert-headline-text{font-family:'Outfit',sans-serif;font-size:0.5rem;color:#666;margin-bottom:.2em;}
-.cert-completion-text{font-family:'Outfit',sans-serif;font-size:0.55rem;color:#1a1208;font-weight:700;margin-bottom:.3em;}
+.cert-headline-text{font-family:'Outfit',sans-serif;font-size:0.46rem;color:#666;margin-bottom:.15em;}
+.cert-completion-text{font-family:'Outfit',sans-serif;font-size:0.5rem;color:#1a1208;font-weight:700;margin-bottom:.2em;}
 .cert-achievement{
-  font-family:'DM Mono',monospace;font-size:0.42rem;color:#999;
-  font-style:italic;margin-bottom:.5em;
+  font-family:'DM Mono',monospace;font-size:0.38rem;color:#999;
+  font-style:italic;margin-bottom:.4em;
 }
 
 .cert-sig-bar{
@@ -403,24 +404,24 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 }
 .cert-sig-item{text-align:center;}
 .cert-sig-line{
-  height:1px;width:60px;
+  height:1px;width:50px;
   background:linear-gradient(90deg,transparent,#b8a060,transparent);
   margin:0 auto .3em;
 }
-.cert-sig-name{font-family:'Outfit',sans-serif;font-size:0.5rem;color:#333;font-weight:700;margin-bottom:.1em;}
+.cert-sig-name{font-family:'Outfit',sans-serif;font-size:0.46rem;color:#333;font-weight:700;margin-bottom:.1em;}
 .cert-sig-lbl{
-  font-family:'DM Mono',monospace;font-size:0.38rem;
+  font-family:'DM Mono',monospace;font-size:0.36rem;
   letter-spacing:.1em;text-transform:uppercase;color:#999;
 }
-.cert-seal-mid{font-size:1rem;opacity:.7;padding-bottom:.5em;}
+.cert-seal-mid{font-size:1rem;opacity:.7;padding-bottom:.4em;}
 
-.cert-meta-row{display:flex;gap:3em;justify-content:center;margin-top:.5em;}
+.cert-meta-row{display:flex;gap:2em;justify-content:center;margin-top:.4em;}
 .cert-meta-col{text-align:center;}
 .cert-meta-col-label{
-  font-family:'DM Mono',monospace;font-size:0.38rem;
+  font-family:'DM Mono',monospace;font-size:0.36rem;
   letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:.2em;
 }
-.cert-meta-col-val{font-family:'DM Mono',monospace;font-size:0.45rem;color:#333;font-weight:600;}
+.cert-meta-col-val{font-family:'DM Mono',monospace;font-size:0.42rem;color:#333;font-weight:600;}
 
 .cert-actions{display:flex;gap:.5rem;padding:.75rem 1.25rem;border-top:1px solid rgba(0,0,0,.07);background:rgba(0,0,0,.02);}
 
@@ -430,9 +431,6 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
   .cert-corner.tr{top:10px;right:10px;}
   .cert-corner.bl{bottom:10px;left:10px;}
   .cert-corner.br{bottom:10px;right:10px;}
-  .cert-title-main{font-size:1.2em;}
-  .cert-recipient-name{font-size:1.6em;}
-  .cert-sig-line{width:50px;}
 }
 
 /* legacy compat */
@@ -661,9 +659,8 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 </style>
 
 <style>
-/* Certificate A5 landscape normalization */
+/* Certificate fixed-size normalization */
 .cert-body{width:100%!important;box-sizing:border-box;}
-.cert-wrapper{width:100%;display:flex;justify-content:center;margin:0 auto 1.5rem;}
 
 /* Icon integration styles */
 svg.lucide-icon,[class*="ds-icon"] svg,[class*="stat-icon"] svg,[class*="bnav-icon"] svg,.emoji svg{
@@ -1325,7 +1322,7 @@ async function loadCerts() {
 
     if (isLocked) {
       return `<div class="cert-wrapper">
-        <div class="cert-card" style="position:relative;overflow:hidden;min-height:180px;">
+        <div class="cert-card" style="position:relative;overflow:hidden;">
           <div class="cert-corner tl"></div><div class="cert-corner tr"></div>
           <div class="cert-corner bl"></div><div class="cert-corner br"></div>
           <div class="cert-watermark">frNtcOda</div>
