@@ -319,13 +319,13 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 /* ── CERTIFICATE CARD ── */
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;700;900&display=swap');
 
-.cert-wrapper{display:flex;justify-content:center;margin:0 auto 1.5rem;}
+.cert-wrapper{display:flex;justify-content:center;align-items:center;margin:0 auto 1.5rem;}
 .cert-card{
   background:#fffef9;border:1px solid #c9b87c;border-radius:3px;
   position:relative;overflow:hidden;
   width:320px!important;min-width:320px!important;max-width:320px!important;
   height:200px!important;min-height:200px!important;max-height:200px!important;
-  flex-shrink:0;flex-grow:0;
+  flex-shrink:0!important;flex-grow:0!important;align-self:center!important;
   box-shadow:0 6px 32px rgba(0,0,0,.18);
 }
 .cert-card::before{
@@ -2834,6 +2834,47 @@ function _showBackOnlineBanner() {
 window.addEventListener('offline', _showOfflineBanner);
 window.addEventListener('online',  _showBackOnlineBanner);
 if (!navigator.onLine) _showOfflineBanner();
+</script>
+
+<script>
+// ── CERT SIZE DEBUG ──────────────────────────────────────────────
+// Polls for cert cards since they render dynamically after Firestore loads
+(function certSizeDebug() {
+  function check() {
+    const cards = document.querySelectorAll('.cert-card');
+    if (cards.length === 0) {
+      console.log('[frNtcOda] cert-card: no cards in DOM yet (will retry)');
+      return false;
+    }
+    cards.forEach((card, i) => {
+      const r = card.getBoundingClientRect();
+      console.log('[frNtcOda] cert-card[' + i + '] rendered size →', Math.round(r.width) + 'px × ' + Math.round(r.height) + 'px');
+      console.log('[frNtcOda] cert-card[' + i + '] computed style →', {
+        width:     getComputedStyle(card).width,
+        height:    getComputedStyle(card).height,
+        minWidth:  getComputedStyle(card).minWidth,
+        maxWidth:  getComputedStyle(card).maxWidth,
+        flexGrow:  getComputedStyle(card).flexGrow,
+        flexShrink:getComputedStyle(card).flexShrink,
+        alignSelf: getComputedStyle(card).alignSelf,
+      });
+      const expected = { w: 320, h: 200 };
+      if (Math.round(r.width) !== expected.w || Math.round(r.height) !== expected.h) {
+        console.warn('[frNtcOda] cert-card[' + i + '] size MISMATCH — expected ' + expected.w + '×' + expected.h + 'px, got ' + Math.round(r.width) + '×' + Math.round(r.height) + 'px');
+      } else {
+        console.log('[frNtcOda] cert-card[' + i + '] size OK ✓');
+      }
+    });
+    return true;
+  }
+  // Check immediately and then again after certs have had time to load
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!check()) {
+      const intervals = [500, 1500, 3000, 6000];
+      intervals.forEach(ms => setTimeout(check, ms));
+    }
+  });
+})();
 </script>
 </body>
 </html>

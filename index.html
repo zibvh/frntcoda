@@ -700,6 +700,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: visible;
   }
   .cert-card {
     background: #ffffff;
@@ -708,14 +709,15 @@
     padding: 0;
     position: relative;
     overflow: hidden;
-    width: 320px!important;
-    min-width: 320px!important;
-    max-width: 320px!important;
-    height: 200px!important;
-    min-height: 200px!important;
-    max-height: 200px!important;
-    flex-shrink: 0;
-    flex-grow: 0;
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
+    height: 200px !important;
+    min-height: 200px !important;
+    max-height: 200px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    align-self: center !important;
     box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     transform: rotate(-0.5deg);
     display: flex;
@@ -1550,6 +1552,29 @@
 </footer>
 
 <script>
+  // ── CERT SIZE DEBUG ──────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const card = document.querySelector('.cert-card');
+    if (!card) { console.warn('[frNtcOda] cert-card: element not found'); return; }
+    const r = card.getBoundingClientRect();
+    console.log('[frNtcOda] cert-card rendered size →', Math.round(r.width) + 'px × ' + Math.round(r.height) + 'px');
+    console.log('[frNtcOda] cert-card computed style →', {
+      width:     getComputedStyle(card).width,
+      height:    getComputedStyle(card).height,
+      minWidth:  getComputedStyle(card).minWidth,
+      maxWidth:  getComputedStyle(card).maxWidth,
+      flexGrow:  getComputedStyle(card).flexGrow,
+      flexShrink:getComputedStyle(card).flexShrink,
+      alignSelf: getComputedStyle(card).alignSelf,
+    });
+    const expected = { w: 320, h: 200 };
+    if (Math.round(r.width) !== expected.w || Math.round(r.height) !== expected.h) {
+      console.warn('[frNtcOda] cert-card size MISMATCH — expected ' + expected.w + '×' + expected.h + 'px, got ' + Math.round(r.width) + '×' + Math.round(r.height) + 'px');
+    } else {
+      console.log('[frNtcOda] cert-card size OK ✓');
+    }
+  });
+
   // Hamburger menu
   function toggleMobileNav() {
     const nav = document.getElementById('mobile-nav');
