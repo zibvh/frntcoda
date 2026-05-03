@@ -319,11 +319,12 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 /* ── CERTIFICATE CARD ── */
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;700;900&display=swap');
 
-.cert-wrapper{width:100%;max-width:750px;margin:0 auto 1.5rem;}
+.cert-wrapper{width:100%;display:flex;justify-content:center;margin:0 auto 1.5rem;}
 .cert-card{
   background:#fffef9;border:1px solid #c9b87c;border-radius:3px;
-  position:relative;overflow:hidden;width:100%;
-  padding-bottom:62%;
+  position:relative;overflow:hidden;
+  width:340px;height:210px;
+  flex-shrink:0;
   box-shadow:0 6px 32px rgba(0,0,0,.18);
 }
 .cert-card::before{
@@ -364,32 +365,32 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 }
 
 .cert-title-main{
-  font-family:'Playfair Display',serif;font-size:1.7em;font-weight:900;
+  font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:900;
   color:#1a1208;letter-spacing:.1em;text-transform:uppercase;
   text-shadow:0 1px 0 rgba(201,168,76,.25);
 }
 .cert-sub-title{
   font-family:'Playfair Display',serif;font-style:italic;
-  font-size:.58em;color:#7a6020;margin-bottom:.8em;
+  font-size:0.5rem;color:#7a6020;margin-bottom:.8em;
 }
 
 .cert-subtitle-bar{display:flex;align-items:center;gap:.6em;width:50%;margin-bottom:.4em;}
 .cert-subtitle-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);}
 .cert-subtitle-text{
-  font-family:'DM Mono',monospace;font-size:.5em;
+  font-family:'DM Mono',monospace;font-size:0.42rem;
   letter-spacing:.2em;text-transform:uppercase;
   color:#a08040;white-space:nowrap;
 }
 
 .cert-recipient-name{
-  font-family:'Dancing Script',cursive;font-size:2.3em;font-weight:700;
+  font-family:'Dancing Script',cursive;font-size:1.5rem;font-weight:700;
   color:#1a1208;line-height:1.2;margin-bottom:.2em;word-break:break-word;
 }
 
-.cert-headline-text{font-family:'Outfit',sans-serif;font-size:.62em;color:#666;margin-bottom:.2em;}
-.cert-completion-text{font-family:'Outfit',sans-serif;font-size:.72em;color:#1a1208;font-weight:700;margin-bottom:.3em;}
+.cert-headline-text{font-family:'Outfit',sans-serif;font-size:0.5rem;color:#666;margin-bottom:.2em;}
+.cert-completion-text{font-family:'Outfit',sans-serif;font-size:0.55rem;color:#1a1208;font-weight:700;margin-bottom:.3em;}
 .cert-achievement{
-  font-family:'DM Mono',monospace;font-size:.48em;color:#999;
+  font-family:'DM Mono',monospace;font-size:0.42rem;color:#999;
   font-style:italic;margin-bottom:.5em;
 }
 
@@ -402,29 +403,28 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 }
 .cert-sig-item{text-align:center;}
 .cert-sig-line{
-  height:1px;width:80px;
+  height:1px;width:60px;
   background:linear-gradient(90deg,transparent,#b8a060,transparent);
   margin:0 auto .3em;
 }
-.cert-sig-name{font-family:'Outfit',sans-serif;font-size:.65em;color:#333;font-weight:700;margin-bottom:.1em;}
+.cert-sig-name{font-family:'Outfit',sans-serif;font-size:0.5rem;color:#333;font-weight:700;margin-bottom:.1em;}
 .cert-sig-lbl{
-  font-family:'DM Mono',monospace;font-size:.44em;
+  font-family:'DM Mono',monospace;font-size:0.38rem;
   letter-spacing:.1em;text-transform:uppercase;color:#999;
 }
-.cert-seal-mid{font-size:1.6em;opacity:.7;padding-bottom:.5em;}
+.cert-seal-mid{font-size:1rem;opacity:.7;padding-bottom:.5em;}
 
 .cert-meta-row{display:flex;gap:3em;justify-content:center;margin-top:.5em;}
 .cert-meta-col{text-align:center;}
 .cert-meta-col-label{
-  font-family:'DM Mono',monospace;font-size:.44em;
+  font-family:'DM Mono',monospace;font-size:0.38rem;
   letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:.2em;
 }
-.cert-meta-col-val{font-family:'DM Mono',monospace;font-size:.56em;color:#333;font-weight:600;}
+.cert-meta-col-val{font-family:'DM Mono',monospace;font-size:0.45rem;color:#333;font-weight:600;}
 
 .cert-actions{display:flex;gap:.5rem;padding:.75rem 1.25rem;border-top:1px solid rgba(0,0,0,.07);background:rgba(0,0,0,.02);}
 
 @media(max-width:600px){
-  .cert-card{padding-bottom:70%;}
   .cert-corner{width:16px;height:16px;}
   .cert-corner.tl{top:10px;left:10px;}
   .cert-corner.tr{top:10px;right:10px;}
@@ -663,8 +663,7 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 <style>
 /* Certificate A5 landscape normalization */
 .cert-body{width:100%!important;box-sizing:border-box;}
-.cert-card{width:100%!important;max-width:780px;margin:0 auto;}
-.cert-wrapper{width:100%;max-width:780px;margin:0 auto 1.5rem;}
+.cert-wrapper{width:100%;display:flex;justify-content:center;margin:0 auto 1.5rem;}
 
 /* Icon integration styles */
 svg.lucide-icon,[class*="ds-icon"] svg,[class*="stat-icon"] svg,[class*="bnav-icon"] svg,.emoji svg{
