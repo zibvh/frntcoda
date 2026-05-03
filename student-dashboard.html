@@ -323,9 +323,9 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 .cert-card{
   background:#fffef9;border:1px solid #c9b87c;border-radius:3px;
   position:relative;overflow:hidden;
-  width:320px!important;height:200px!important;
-  max-width:320px!important;
-  flex-shrink:0;
+  width:320px!important;min-width:320px!important;max-width:320px!important;
+  height:200px!important;min-height:200px!important;max-height:200px!important;
+  flex-shrink:0!important;flex-grow:0!important;
   box-shadow:0 6px 32px rgba(0,0,0,.18);
 }
 .cert-card::before{
@@ -425,13 +425,7 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 
 .cert-actions{display:flex;gap:.5rem;padding:.75rem 1.25rem;border-top:1px solid rgba(0,0,0,.07);background:rgba(0,0,0,.02);}
 
-@media(max-width:600px){
-  .cert-corner{width:16px;height:16px;}
-  .cert-corner.tl{top:10px;left:10px;}
-  .cert-corner.tr{top:10px;right:10px;}
-  .cert-corner.bl{bottom:10px;left:10px;}
-  .cert-corner.br{bottom:10px;right:10px;}
-}
+/* cert corners fixed — no responsive override */
 
 /* legacy compat */
 .cert-icon{font-size:2.5rem;margin-bottom:.75rem;}
@@ -660,7 +654,7 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 
 <style>
 /* Certificate fixed-size normalization */
-.cert-body{width:100%!important;box-sizing:border-box;}
+.cert-body{box-sizing:border-box;}
 
 /* Icon integration styles */
 svg.lucide-icon,[class*="ds-icon"] svg,[class*="stat-icon"] svg,[class*="bnav-icon"] svg,.emoji svg{
@@ -1322,7 +1316,7 @@ async function loadCerts() {
 
     if (isLocked) {
       return `<div class="cert-wrapper">
-        <div class="cert-card" style="position:relative;overflow:hidden;">
+        <div class="cert-card" style="position:relative;overflow:hidden;width:320px!important;height:200px!important;min-width:320px!important;max-width:320px!important;min-height:200px!important;max-height:200px!important;flex-shrink:0!important;flex-grow:0!important;">
           <div class="cert-corner tl"></div><div class="cert-corner tr"></div>
           <div class="cert-corner bl"></div><div class="cert-corner br"></div>
           <div class="cert-watermark">frNtcOda</div>
@@ -1354,7 +1348,7 @@ async function loadCerts() {
     const yearStr = c.issuedAt?.toDate ? c.issuedAt.toDate().getFullYear() : new Date().getFullYear();
     const shortId = c.certId ? c.certId.slice(-10).toUpperCase() : '—';
     return `<div class="cert-wrapper">
-      <div class="cert-card" id="cert-card-${c.certId}" data-cert-id="${c.certId}">
+      <div class="cert-card" id="cert-card-${c.certId}" data-cert-id="${c.certId}" style="width:320px!important;height:200px!important;min-width:320px!important;max-width:320px!important;min-height:200px!important;max-height:200px!important;flex-shrink:0!important;flex-grow:0!important;">
         <!-- Corner brackets -->
         <div class="cert-corner tl"></div>
         <div class="cert-corner tr"></div>
@@ -1444,39 +1438,26 @@ window.downloadCert = async function(certId) {
       });
     }
 
-    // Render at the exact same size the cert displays on screen (320×200)
-    // then upscale with html2canvas scale for sharpness — no layout mismatch
     const W = 320, H = 200;
 
     const container = document.createElement('div');
-    container.style.cssText = [
-      'position:fixed','top:-9999px','left:-9999px',
-      'width:' + W + 'px','height:' + H + 'px',
-      'overflow:hidden','z-index:-999',
-    ].join(';');
+    container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:' + W + 'px;height:' + H + 'px;overflow:hidden;z-index:-999;';
 
     const clone = srcCard.cloneNode(true);
-    clone.style.cssText = [
-      'width:' + W + 'px !important','height:' + H + 'px !important',
-      'min-width:' + W + 'px','min-height:' + H + 'px',
-      'max-width:' + W + 'px','max-height:' + H + 'px',
-      'position:relative','top:0','left:0',
-      'margin:0','transform:none',
-      'border-radius:3px','overflow:hidden',
-    ].join(';');
+    clone.style.cssText = 'width:' + W + 'px;height:' + H + 'px;min-width:' + W + 'px;min-height:' + H + 'px;max-width:' + W + 'px;max-height:' + H + 'px;position:relative;top:0;left:0;margin:0;transform:none;border-radius:3px;overflow:hidden;';
 
     container.appendChild(clone);
     document.body.appendChild(container);
 
     const canvas = await window.html2canvas(container, {
-      scale: 4,           // 4× → 1280×800px output — crisp on any screen
+      scale: 4,
       useCORS: true,
       backgroundColor: '#fffef9',
       logging: false,
       width: W,
       height: H,
-      windowWidth: window.innerWidth,
-      windowHeight: window.innerHeight,
+      windowWidth: W,
+      windowHeight: H,
       imageTimeout: 0,
     });
 
@@ -2841,6 +2822,25 @@ function _showBackOnlineBanner() {
 window.addEventListener('offline', _showOfflineBanner);
 window.addEventListener('online',  _showBackOnlineBanner);
 if (!navigator.onLine) _showOfflineBanner();
+</script>
+<script>
+(function() {
+  function check() {
+    var cards = document.querySelectorAll('.cert-card');
+    if (!cards.length) return;
+    cards.forEach(function(card, i) {
+      var r = card.getBoundingClientRect();
+      var cs = getComputedStyle(card);
+      console.log('[frNtcOda] cert-card[' + i + '] rendered:', Math.round(r.width) + 'x' + Math.round(r.height) + 'px | computed:', cs.width, cs.height);
+      if (Math.round(r.width) === 320 && Math.round(r.height) === 200) {
+        console.log('[frNtcOda] cert-card[' + i + '] size OK ✓');
+      } else {
+        console.error('[frNtcOda] cert-card[' + i + '] WRONG — expected 320x200, got ' + Math.round(r.width) + 'x' + Math.round(r.height));
+      }
+    });
+  }
+  [500, 1500, 3000, 6000].forEach(function(ms) { setTimeout(check, ms); });
+})();
 </script>
 </body>
 </html>
