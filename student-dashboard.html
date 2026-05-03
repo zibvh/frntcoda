@@ -319,13 +319,13 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 /* ── CERTIFICATE CARD ── */
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;700;900&display=swap');
 
-.cert-wrapper{display:flex;justify-content:center;margin:0 auto 1.5rem;overflow:visible;}
+.cert-wrapper{display:flex;justify-content:center;align-items:center;margin:0 auto;overflow:visible;}
 .cert-card{
   background:#fffef9;border:1px solid #c9b87c;border-radius:3px;
   position:relative;overflow:hidden;
   width:320px!important;min-width:320px!important;max-width:320px!important;
   height:200px!important;min-height:200px!important;max-height:200px!important;
-  flex-shrink:0!important;flex-grow:0!important;align-self:auto!important;
+  flex-shrink:0!important;flex-grow:0!important;
   box-shadow:0 6px 32px rgba(0,0,0,.18);
 }
 .cert-card::before{
@@ -426,6 +426,25 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 .cert-actions{display:flex;gap:.5rem;padding:.75rem 1.25rem;border-top:1px solid rgba(0,0,0,.07);background:rgba(0,0,0,.02);}
 
 /* cert corners — fixed, no responsive override */
+
+/* ── CERTIFICATES PANEL LAYOUT ── */
+#panel-certificates{padding:.75rem;}
+#certs-list{
+  display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  width:100%;
+}
+/* each cert entry: card + buttons stacked */
+#certs-list > div{
+  display:flex;flex-direction:column;align-items:center;
+  width:100%;max-width:340px;
+}
+/* button row under card */
+#certs-list .cert-btn-row{
+  display:flex;gap:.5rem;padding:.6rem 0 .25rem;width:320px;
+}
+#certs-list .cert-btn-row .btn{
+  flex:1;justify-content:center;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 
 /* legacy compat */
 .cert-icon{font-size:2.5rem;margin-bottom:.75rem;}
@@ -1412,11 +1431,11 @@ async function loadCerts() {
           </div>
         </div>
       </div>
-      <div style="display:flex;gap:.5rem;padding:.75rem 0 .25rem;">
-        <button class="btn btn-red btn-sm" style="flex:1;justify-content:center;" onclick="downloadCert('${c.certId}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Download Certificate
+      <div class="cert-btn-row">
+        <button class="btn btn-red btn-sm" onclick="downloadCert('${c.certId}')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Download
         </button>
-        <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="shareCert('${c.certId}','${c.courseName.replace(/'/g,"\\'")}','${c.studentName||name}')">
+        <button class="btn btn-ghost btn-sm" onclick="shareCert('${c.certId}','${c.courseName.replace(/'/g,"\\'")}','${c.studentName||name}')">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg> Share
         </button>
       </div>
@@ -2838,22 +2857,19 @@ if (!navigator.onLine) _showOfflineBanner();
 
 <script>
 // ── CERT SIZE DEBUG ──────────────────────────────────────────────
-// Certs render dynamically — poll until they appear
 (function() {
-  var EXPECTED_W = 320, EXPECTED_H = 200, checked = false;
   function check() {
     var cards = document.querySelectorAll('.cert-card');
     if (!cards.length) return;
-    checked = true;
     cards.forEach(function(card, i) {
       var r = card.getBoundingClientRect();
       var cs = getComputedStyle(card);
       console.log('[frNtcOda:dashboard] cert-card[' + i + '] rendered:', Math.round(r.width) + 'x' + Math.round(r.height) + 'px');
-      console.log('[frNtcOda:dashboard] cert-card[' + i + '] computed width:', cs.width, '| height:', cs.height, '| minW:', cs.minWidth, '| maxW:', cs.maxWidth, '| flexGrow:', cs.flexGrow, '| flexShrink:', cs.flexShrink);
-      if (Math.round(r.width) === EXPECTED_W && Math.round(r.height) === EXPECTED_H) {
+      console.log('[frNtcOda:dashboard] cert-card[' + i + '] computed width:', cs.width, '| height:', cs.height, '| minW:', cs.minWidth, '| maxW:', cs.maxWidth);
+      if (Math.round(r.width) === 320 && Math.round(r.height) === 200) {
         console.log('[frNtcOda:dashboard] cert-card[' + i + '] size OK ✓ (320x200)');
       } else {
-        console.error('[frNtcOda:dashboard] cert-card[' + i + '] size WRONG — expected 320x200, got ' + Math.round(r.width) + 'x' + Math.round(r.height));
+        console.error('[frNtcOda:dashboard] cert-card[' + i + '] WRONG — expected 320x200, got ' + Math.round(r.width) + 'x' + Math.round(r.height));
       }
     });
   }
