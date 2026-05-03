@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SHD8EH3KRG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-SHD8EH3KRG');
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>frNtcOda — Learn To Code In Any Language</title>
+<title>frNtcOda — Learn To Code In Any Language | Nigeria's Premier E-Learning</title>
 
 <!-- SEO rsh-->
 <meta name="description" content="frNtcOda is Nigeria's premier e-learning platform for coding. Learn HTML, CSS, JavaScript, Python and more from expert tutors. Earn verified certificates.">
-<meta name="keywords" content="frNtcOda, learn to code, Nigeria, online coding courses, HTML, CSS, JavaScript, Python, e-learning, programming, certificates">
+<meta name="keywords" content="frNtcOda, learn to code, Nigeria, online coding courses, HTML, CSS, JavaScript, Python, e-learning, programming, certificates, coding school, web development, mobile app development, frontend, backend">
 <meta name="author" content="frNtcOda">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://frntcoda.onrender.com/">
@@ -42,6 +51,115 @@
 <link rel="apple-touch-icon" href="frntcoda.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<!-- Structured Data: Organization -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "frNtcOda",
+  "url": "https://frntcoda.onrender.com/",
+  "logo": "https://frntcoda.onrender.com/frntcoda.png",
+  "description": "Nigeria's premier online coding school. Learn programming languages from expert tutors and earn verified certificates.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "NG"
+  },
+  "sameAs": [
+    "https://twitter.com/frntcoda"
+  ]
+}
+</script>
+
+<!-- Structured Data: WebSite -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "frNtcOda",
+  "url": "https://frntcoda.onrender.com/",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://frntcoda.onrender.com/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<!-- Structured Data: Course Carousel -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {
+      "@type": "Course",
+      "name": "HTML Fundamentals",
+      "description": "Learn the basics of web development with HTML.",
+      "provider": {
+        "@type": "Organization",
+        "name": "frNtcOda",
+        "sameAs": "https://frntcoda.onrender.com/"
+      }
+    },
+    {
+      "@type": "Course",
+      "name": "CSS Mastery",
+      "description": "Master responsive design and advanced CSS layouts.",
+      "provider": {
+        "@type": "Organization",
+        "name": "frNtcOda",
+        "sameAs": "https://frntcoda.onrender.com/"
+      }
+    },
+    {
+      "@type": "Course",
+      "name": "JavaScript Essentials",
+      "description": "Become proficient in JavaScript and interactive web development.",
+      "provider": {
+        "@type": "Organization",
+        "name": "frNtcOda",
+        "sameAs": "https://frntcoda.onrender.com/"
+      }
+    }
+  ]
+}
+</script>
+
+<!-- Structured Data: FAQ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I enroll in a course on frNtcOda?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Create a free account, browse the course catalog, and pay securely via Paystack. You'll get instant access to all lessons and materials."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Are the certificates from frNtcOda verifiable?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Every certificate includes a unique QR code and a public verification URL that employers can use to confirm your achievement instantly."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What payment methods do you accept?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "We accept secure payments through Paystack, supporting debit cards, bank transfers, and USSD."
+      }
+    }
+  ]
+}
+</script>
+
 <style>
 @media (max-width: 768px) {
   .two-col {
@@ -1553,24 +1671,6 @@
 </footer>
 
 <script>
-  // ── CERT SIZE DEBUG ──────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', function() {
-    var card = document.querySelector('.cert-card');
-    if (!card) { console.warn('[frNtcOda:index] cert-card not found in DOM'); return; }
-    var r = card.getBoundingClientRect();
-    var cs = getComputedStyle(card);
-    console.log('[frNtcOda:index] cert-card rendered:', Math.round(r.width) + 'x' + Math.round(r.height) + 'px');
-    console.log('[frNtcOda:index] cert-card computed width:', cs.width, '| height:', cs.height, '| minW:', cs.minWidth, '| maxW:', cs.maxWidth);
-    console.log('[frNtcOda:index] cert-card parent (.cert-visual) rendered:', Math.round(card.parentElement.getBoundingClientRect().width) + 'x' + Math.round(card.parentElement.getBoundingClientRect().height) + 'px');
-    if (Math.round(r.width) === 320 && Math.round(r.height) === 200) {
-      console.log('[frNtcOda:index] cert-card size OK ✓ (320x200)');
-    } else {
-      console.error('[frNtcOda:index] cert-card size WRONG — expected 320x200, got ' + Math.round(r.width) + 'x' + Math.round(r.height));
-    }
-  });
-</script>
-
-<script>
   // Hamburger menu
   function toggleMobileNav() {
     const nav = document.getElementById('mobile-nav');
@@ -1680,20 +1780,12 @@
 </div>
 
 <script>
-  const courseData = [
-    {title:'HTML Fundamentals', sub:'HTML & CSS · ₦5,000'},
-    {title:'CSS Mastery',        sub:'CSS & Design · ₦6,500'},
-    {title:'JavaScript Essentials', sub:'JavaScript · ₦8,000'},
-  ];
-  let _cgIndex = 0;
   function openLoginGate(btn){
     const card = btn.closest('.course-card');
-    const cards = document.querySelectorAll('.course-card');
-    let idx = 0;
-    cards.forEach((c,i)=>{if(c===card)idx=i;});
-    const d = courseData[idx] || courseData[0];
-    document.getElementById('mg-ctitle').textContent = d.title;
-    document.getElementById('mg-csub').textContent   = d.sub;
+    const titleEl = card ? card.querySelector('.course-name') : null;
+    const title = titleEl ? titleEl.textContent : 'Course';
+    document.getElementById('mg-ctitle').textContent = title;
+    document.getElementById('mg-csub').textContent = 'Enroll Now';
     document.getElementById('login-modal').classList.add('open');
   }
   document.getElementById('login-modal').addEventListener('click', function(e){
@@ -1733,13 +1825,15 @@ async function loadHomepageCourses() {
       wrapper.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--gray);font-family:var(--mono);font-size:.85rem;">No courses available yet — check back soon!</div>`;
       return;
     }
-    const courses = snap.docs.slice(0, 3).map(d => {
+    
+    // Get all courses and pick 3 random ones
+    const allCourses = snap.docs.map(d => {
       const data = d.data();
       const lang = data.language || "HTML";
       const lessonItems = data.lessons || [];
-      const lessons   = lessonItems.filter(l=>l.type==="Lesson"||!l.type).length;
-      const assigns   = lessonItems.filter(l=>l.type==="Assignment").length;
-      return { id: d.id, lang, lessons, assigns,
+      const lessonsLen = lessonItems.filter(l=>l.type==="Lesson"||!l.type).length;
+      const assignsLen = lessonItems.filter(l=>l.type==="Assignment").length;
+      return { id: d.id, lang, lessons: lessonsLen, assigns: assignsLen,
         title: data.title || "Untitled",
         desc: data.description || "",
         price: data.price || 0,
@@ -1747,6 +1841,10 @@ async function loadHomepageCourses() {
         bannerURL: data.bannerURL || '',
       };
     });
+    
+    // Randomize and pick 3
+    const shuffled = allCourses.sort(() => 0.5 - Math.random());
+    const courses = shuffled.slice(0, 3);
 
     wrapper.innerHTML = courses.map((c, i) => {
       const isFree = c.price === 0;
@@ -1760,7 +1858,7 @@ async function loadHomepageCourses() {
         </div>
         <h3 class="course-name" style="padding:1.25rem 1.5rem 0;">${c.title}</h3>
         <p class="course-desc" style="padding:0.4rem 1.5rem 0;">${(c.desc||"").slice(0,100)}${c.desc&&c.desc.length>100?"…":""}</p>
-        ${lessons>0?`<div style="font-family:var(--mono);font-size:.68rem;color:var(--gray);padding:.5rem 1.5rem 0;display:flex;gap:.75rem;align-items:center;">${BOOK_SVG} ${lessons} Lessons${assigns>0?` &nbsp;·&nbsp; ${PEN_SVG} ${assigns} Assignments`:''}</div>`:""}
+        ${c.lessons>0?`<div style="font-family:var(--mono);font-size:.68rem;color:var(--gray);padding:.5rem 1.5rem 0;display:flex;gap:.75rem;align-items:center;">${BOOK_SVG} ${c.lessons} Lessons${c.assigns>0?` &nbsp;·&nbsp; ${PEN_SVG} ${c.assigns} Assignments`:''}</div>`:""}
         <div class="course-meta" style="padding:.75rem 1.5rem 1.25rem;margin-top:.75rem;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;">
           <div>
             <div class="course-price"><span class="currency">₦</span>${isFree?'FREE':(c.price||0).toLocaleString()}</div>
@@ -1779,7 +1877,7 @@ async function loadHomepageCourses() {
     });
 
   } catch(e) {
-    console.error("Could not load courses:", e);
+    console.error("Could not load courses");
     wrapper.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--gray);font-family:var(--mono);font-size:.85rem;">Could not load courses. Please refresh.</div>`;
   }
 }
