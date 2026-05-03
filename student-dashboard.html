@@ -319,7 +319,7 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 /* ── CERTIFICATE CARD ── */
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Playfair+Display:wght@400;700;900&display=swap');
 
-.cert-wrapper{display:flex;justify-content:center;margin:0 auto 1.5rem;}
+.cert-wrapper{display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 1.5rem;}
 .cert-card{
   background:#fffef9;border:1px solid #c9b87c;border-radius:3px;
   position:relative;overflow:hidden;
@@ -1412,9 +1412,9 @@ async function loadCerts() {
           </div>
         </div>
       </div>
-      <div style="display:flex;gap:.5rem;padding:.75rem 0 .25rem;">
+      <div style="display:flex;gap:.5rem;padding:.75rem 0 .25rem;width:320px;">
         <button class="btn btn-red btn-sm" style="flex:1;justify-content:center;" onclick="downloadCert('${c.certId}')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Download Certificate
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Download
         </button>
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="shareCert('${c.certId}','${c.courseName.replace(/'/g,"\\'")}','${c.studentName||name}')">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg> Share
@@ -1439,7 +1439,6 @@ window.downloadCert = async function(certId) {
     }
 
     const W = 320, H = 200;
-
     const container = document.createElement('div');
     container.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:' + W + 'px;height:' + H + 'px;overflow:hidden;z-index:-999;';
 
