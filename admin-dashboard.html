@@ -755,11 +755,31 @@ function courseReviewCardHTML(c) {
 
 window.approveCourse = async function(courseId, btn) {
   const fee = document.getElementById('fee-'+courseId)?.value;
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
   try {
-    await updateDoc(doc(db,'courses',courseId),{status:'live',approvedAt:serverTimestamp(),...(fee?{price:Number(fee)}:{})});
-    document.getElementById('rcard-'+courseId)?.remove();
-    showToast('Course approved and live <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>','success');
+    // Schedule auto-approval: set a scheduledLiveAt timestamp, then go live after 24h
+    const scheduledAt = new Date(Date.now() + TWENTY_FOUR_HOURS);
+    await updateDoc(doc(db,'courses',courseId),{
+      status:'scheduled',
+      scheduledLiveAt: scheduledAt,
+      ...(fee?{price:Number(fee)}:{})
+    });
+    // Update UI immediately
+    const card = document.getElementById('rcard-'+courseId);
+    if (card) {
+      const btnArea = btn.closest('.cpc-footer') || btn.parentNode;
+      btnArea.innerHTML = `<span style="font-family:var(--mono);font-size:.7rem;color:var(--blue-glow);">⏱ Scheduled — goes live in ~24h</span>`;
+    }
+    showToast('Course scheduled — goes live within 24h ✅','success');
     loadOverview();
+    // Auto-set to live after 24 hours (fires while admin tab is open)
+    setTimeout(async function() {
+      try {
+        await updateDoc(doc(db,'courses',courseId),{status:'live',approvedAt:serverTimestamp()});
+        document.getElementById('rcard-'+courseId)?.remove();
+        loadOverview();
+      } catch(e) { /* silent — Cloud Function or next load will catch it */ }
+    }, TWENTY_FOUR_HOURS);
   } catch(e) { showToast('Error: '+e.message,'error'); }
 };
 
@@ -812,9 +832,7 @@ function renderTutorRows(tutors) {
       <td style="font-family:var(--mono);font-size:.7rem;">${courseCount}</td>
       <td><span class="badge ${isPending?'b-pend':t.status==='suspended'?'b-fail':'b-pass'}">${isPending?'Pending':t.status==='suspended'?'Suspended':'Active'}</span></td>
       <td style="display:flex;gap:.3rem;flex-wrap:wrap;">
-        ${isPending?`<button class="btn btn-green btn-sm" onclick="approveTutor('${t.id}',this)">Approve</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectTutor('${t.id}',this)">Reject</button>`
-        :t.status==='suspended'
+        ${t.status==='suspended'
           ?`<button class="btn btn-green btn-sm" onclick="suspendUser('${t.id}',this)">Restore</button>`
           :`<button class="btn btn-danger btn-sm" onclick="suspendUser('${t.id}',this)">Suspend</button>`}
       </td>
@@ -828,12 +846,42 @@ window.filterTutorTable = function(q) {
 };
 
 window.approveTutor = async function(uid, btn) {
-  await updateDoc(doc(db,'users',uid),{status:'active',approvedAt:serverTimestamp()});
-  btn.closest('tr').querySelector('.badge').textContent='Active';
-  btn.closest('tr').querySelector('.badge').className='badge b-pass';
-  btn.closest('td').innerHTML='<span style="font-family:var(--mono);font-size:.7rem;color:var(--green);">Approved <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg></span>';
-  showToast('Tutor approved <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>','success');
-  loadOverview();
+  // Get tutor data to check if registration fee is paid
+  const tutorSnap = await getDoc(doc(db,'users',uid));
+  const tutorData = tutorSnap.data() || {};
+  const hasPaidRegistrationFee = tutorData.registrationFeePaid === true;
+  
+  if (hasPaidRegistrationFee) {
+    // Auto-approve after 5 minutes (300,000 ms)
+    const approvalDelay = 5 * 60 * 1000; // 5 minutes in milliseconds
+    
+    // Update UI to show pending auto-approval
+    btn.closest('tr').querySelector('.badge').textContent='Scheduled';
+    btn.closest('tr').querySelector('.badge').className='badge b-info';
+    btn.closest('td').innerHTML='<span style="font-family:var(--mono);font-size:.7rem;color:var(--blue-glow);">Auto-approving in 5m</span>';
+    showToast('Tutor will be auto-approved in 5 minutes','success');
+    
+    // Schedule the approval
+    setTimeout(async function() {
+      try {
+        await updateDoc(doc(db,'users',uid),{status:'active',approvedAt:serverTimestamp()});
+        // Reload data to reflect the change
+        loadOverview();
+        loadTutors();
+        showToast('Tutor auto-approved <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>','success');
+      } catch(e) {
+        showToast('Error auto-approving tutor: ' + e.message,'error');
+      }
+    }, approvalDelay);
+  } else {
+    // Approve immediately if registration fee not paid
+    await updateDoc(doc(db,'users',uid),{status:'active',approvedAt:serverTimestamp()});
+    btn.closest('tr').querySelector('.badge').textContent='Active';
+    btn.closest('tr').querySelector('.badge').className='badge b-pass';
+    btn.closest('td').innerHTML='<span style="font-family:var(--mono);font-size:.7rem;color:var(--green);">Approved <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg></span>';
+    showToast('Tutor approved <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>','success');
+    loadOverview();
+  }
 };
 
 window.rejectTutor = async function(uid, btn) {

@@ -797,7 +797,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save as Draft
           </button>
           <div id="draft-status" style="font-family:var(--mono);font-size:.58rem;color:var(--gray);text-align:center;display:none;"></div>
-          <p style="font-family:var(--mono);font-size:.6rem;color:var(--gray);text-align:center;margin-top:.25rem;line-height:1.7;">We'll review your course and let you know when it's approved.</p>
+          <p style="font-family:var(--mono);font-size:.6rem;color:var(--gray);text-align:center;margin-top:.25rem;line-height:1.7;">Your course will be reviewed and go live within 24–26 hours.</p>
         </div>
       </div>
 
@@ -1013,7 +1013,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
           <button class="btn btn-ghost btn-full" onclick="showPanel('courses')" style="font-size:.8rem;">
             Cancel
           </button>
-          <p style="font-family:var(--mono);font-size:.6rem;color:var(--gray);text-align:center;margin-top:.25rem;line-height:1.7;">Changes will go for admin review before going live.</p>
+          <p style="font-family:var(--mono);font-size:.6rem;color:var(--gray);text-align:center;margin-top:.25rem;line-height:1.7;">Changes will go live within 24–26 hours.</p>
         </div>
       </div>
     </div>
@@ -1352,7 +1352,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">Edit Course</div>
-    <div class="modal-sub">Changes go to admin for review before going live.</div>
+    <div class="modal-sub">Changes will go live within 24–26 hours.</div>
     <input type="hidden" id="edit-course-id">
     <div class="form-group"><label class="form-label">Title *</label><input class="form-input" id="edit-title"></div>
     <div class="form-row">
@@ -1480,8 +1480,8 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
       <div>✔ Issue completion certificates</div>
     </div>
     <div style="background:rgba(43,107,255,.07);border:1px solid rgba(43,107,255,.18);border-radius:8px;padding:.7rem 1rem;margin-bottom:1.25rem;font-family:var(--mono);font-size:.65rem;color:var(--gray);line-height:1.6;">
-      After payment, an admin will review and activate your account.<br>
-      <span style="color:rgba(255,255,255,.35);">You'll be notified by email once activated.</span>
+      Your account activates instantly after payment.<br>
+      <span style="color:rgba(255,255,255,.35);">You'll be able to start building courses right away.</span>
     </div>
     <button class="btn btn-red btn-full" id="btn-pay-reg-fee" onclick="payTutorRegFee()" style="justify-content:center;font-size:.9rem;padding:.9rem;">
       Pay ₦1,117 &amp; Activate →
@@ -1698,11 +1698,11 @@ window.payTutorRegFee = async function() {
               registrationFeePaid: true,
               registrationFeeRef: res.reference,
               registrationFeePaidAt: serverTimestamp(),
-              status: 'pending', // admin still needs to activate
+              status: 'active', // auto-activated on payment
             });
             tutorProfile.registrationFeePaid = true;
             tutorProfile.registrationFeeRef  = res.reference;
-            showToast('Payment confirmed! ✅ Awaiting admin activation.', 'success');
+            showToast('Payment confirmed! ✅ Account activated. Welcome aboard!', 'success');
             closeModal('reg-fee-gate-modal');
             // Re-enable nav, reload so dashboard initialises fully
             document.querySelectorAll('.ds-item,.bnav-item').forEach(b => b.style.pointerEvents = '');
@@ -2463,7 +2463,7 @@ window.submitCourse = async function() {
       lessons:builderItems.map((item,i)=>({...item, order:i+1})),
       createdAt:serverTimestamp()
     });
-    showToast('Course submitted for review <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg>','success');
+    showToast('Course submitted ✅ — it will go live within 24–26 hours.','success');
     clearBuilder(true);
     await loadMyCourses();
     showPanel('courses');
