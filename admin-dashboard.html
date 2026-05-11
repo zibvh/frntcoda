@@ -777,16 +777,47 @@ window.approveCourse = async function(courseId, btn) {
         await updateDoc(doc(db,'courses',courseId),{status:'live',approvedAt:serverTimestamp()});
         document.getElementById('rcard-'+courseId)?.remove();
         loadOverview();
+        // Email the tutor that their course is live
+        try {
+          const cSnap = await getDoc(doc(db,'courses',courseId));
+          const cData = cSnap.data();
+          const tSnap = await getDoc(doc(db,'users',cData.tutorId));
+          const tData = tSnap.data();
+          if (tData?.email) {
+            await FrntEmail.courseLive({
+              to:          tData.email,
+              toName:      tData.fullName || tData.firstName || 'Tutor',
+              courseTitle: cData.title,
+              courseUrl:   'https://frntcoda.onrender.com/courses.html',
+            });
+          }
+        } catch(_) { /* non-critical */ }
       } catch(e) { /* silent — Cloud Function or next load will catch it */ }
     }, TWENTY_FOUR_HOURS);
   } catch(e) { showToast('Error: '+e.message,'error'); }
 };
 
 window.rejectCourse = async function(courseId, btn) {
-  if (!confirm('Reject this course?')) return;
-  await updateDoc(doc(db,'courses',courseId),{status:'rejected'});
+  const reason = prompt('Rejection reason (shown to tutor):') || 'Your course did not meet our quality standards. Please review the content guidelines and resubmit.';
+  if (reason === null) return; // cancelled
+  await updateDoc(doc(db,'courses',courseId),{status:'rejected', rejectionReason: reason});
   document.getElementById('rcard-'+courseId)?.remove();
   showToast('Course rejected','warning');
+  // Email tutor with the reason
+  try {
+    const cSnap = await getDoc(doc(db,'courses',courseId));
+    const cData = cSnap.data();
+    const tSnap = await getDoc(doc(db,'users',cData.tutorId));
+    const tData = tSnap.data();
+    if (tData?.email) {
+      await FrntEmail.courseRejected({
+        to:          tData.email,
+        toName:      tData.fullName || tData.firstName || 'Tutor',
+        courseTitle: cData.title,
+        reason,
+      });
+    }
+  } catch(_) { /* non-critical */ }
 };
 
 window.adminDeleteCourse = async function(courseId, btn) {

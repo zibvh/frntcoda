@@ -1493,6 +1493,8 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
 </div>
 <script src="email-client.js"></script>
 <script>
+// Navigation stub — runs synchronously before Firebase module loads.
+// The module's window.showPanel overwrites this once it executes.
 (function(){
   window.showPanel = function(id, data){
     window._pendingPanel = {id:id, data:data};
@@ -1701,6 +1703,13 @@ window.payTutorRegFee = async function() {
             tutorProfile.registrationFeePaid = true;
             tutorProfile.registrationFeeRef  = res.reference;
             showToast('Payment confirmed! ✅ Account activated. Welcome aboard!', 'success');
+            // Send activation confirmation email via Resend
+            try {
+              await FrntEmail.tutorActivated({
+                to:     user.email,
+                toName: tutorProfile.fullName || tutorProfile.firstName || 'Tutor',
+              });
+            } catch(_) { /* non-critical */ }
             closeModal('reg-fee-gate-modal');
             // Re-enable nav, reload so dashboard initialises fully
             document.querySelectorAll('.ds-item,.bnav-item').forEach(b => b.style.pointerEvents = '');

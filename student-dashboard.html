@@ -2592,7 +2592,7 @@ function timeAgo(date) {
 
 
 
-// -- Tutor payment notification via frNtcOda Email Service (Resend) --
+// -- sendPaymentEmail via Resend (frNtcOda Email Service) -------
 async function sendPaymentEmail({ tutorEmail, tutorName, studentName, courseName, amount, tutorShare, platformFee, paymentType, courseId }) {
   if (!tutorEmail) return;
   try {
@@ -2602,14 +2602,14 @@ async function sendPaymentEmail({ tutorEmail, tutorName, studentName, courseName
       studentName,
       courseName,
       paymentType: paymentType || 'Course Enrollment',
-      amount:      '\u20a6' + amount.toLocaleString(),
-      tutorShare:  '\u20a6' + tutorShare.toLocaleString(),
-      platformFee: '\u20a6' + platformFee.toLocaleString(),
+      amount:      '₦' + amount.toLocaleString(),
+      tutorShare:  '₦' + tutorShare.toLocaleString(),
+      platformFee: '₦' + platformFee.toLocaleString(),
       courseLink:  `${window.location.origin}/student-dashboard.html?course=${courseId}`
     });
     console.log('[frNtcOda] Payment notification sent to', tutorEmail);
   } catch(e) {
-    console.warn('[frNtcOda] Payment notification failed (non-critical):', e.message);
+    console.warn('[frNtcOda] Email notification failed (non-critical):', e.message);
   }
 }
 
@@ -2814,6 +2814,5 @@ if (!navigator.onLine) _showOfflineBanner();
   [500, 1500, 3000, 6000].forEach(function(ms) { setTimeout(check, ms); });
 })();
 </script>
-<script src="email-client.js"></script>
 </body>
 </html>

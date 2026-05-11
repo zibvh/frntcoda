@@ -846,7 +846,7 @@ window.handleSignup = async function(role) {
 };
 
 
-// -- Welcome email via frNtcOda Email Service (Resend) -----------
+// -- sendWelcomeEmail via Resend (frNtcOda Email Service) --------
 async function sendWelcomeEmail(email, firstName, role) {
   try {
     if (role === 'tutor') {
@@ -1149,6 +1149,5 @@ window.handleGithubSignIn = async function(role) {
   }
 };
 </script>
-<script src="email-client.js"></script>
 </body>
 </html>
