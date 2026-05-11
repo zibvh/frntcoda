@@ -1766,6 +1766,7 @@ window.saveTutorName = async function() {
 
 // ── OVERVIEW ───────────────────────────────────────────────────────
 async function loadOverview() {
+  try {
   const coursesSnap = await getDocs(query(collection(db,'courses'), where('tutorId','==',user.uid)));
   myCourses = coursesSnap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>c.status!=='deleted');
   const liveCourses = myCourses.filter(c=>c.status==='live');
@@ -1846,6 +1847,14 @@ async function loadOverview() {
 
   // Preview
   renderCoursesPreview(myCourses.slice(0,2));
+  } catch(e) {
+    console.error('[frNtcOda] loadOverview failed:', e);
+    ['s-courses','s-students','s-earn','s-subs'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
+    showToast('Could not load overview — check your connection', 'error');
+  }
 }
 
 function renderEnrollChart(enrollments) {

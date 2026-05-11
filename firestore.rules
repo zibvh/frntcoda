@@ -70,7 +70,12 @@ service cloud.firestore {
     // ─── ENROLLMENTS ────────────────────────────────────────────────
 
     match /enrollments/{enrollId} {
-      allow read:   if isAuth() && (resource.data.studentId == uid() || isAdmin());
+      // Students see their own; tutors see enrollments for courses they own; admins see all
+      allow read: if isAuth() && (
+        resource.data.studentId == uid() ||
+        isAdmin() ||
+        get(/databases/$(database)/documents/courses/$(resource.data.courseId)).data.tutorId == uid()
+      );
       allow create: if isAuth() && request.resource.data.studentId == uid();
       allow update: if isAuth() && resource.data.studentId == uid();
       allow delete: if isAdmin();
@@ -123,7 +128,7 @@ service cloud.firestore {
 
       allow read:   if isAuth() && (
                       resource.data.studentId == uid() ||
-                      resource.data.tutorId   == uid() ||  // ← FIXED: tutors can read their earnings
+                      resource.data.tutorId   == uid() ||
                       isAdmin()
                     );
       allow create: if isAuth() && request.resource.data.studentId == uid();
