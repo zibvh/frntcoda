@@ -29,19 +29,25 @@ const FrntEmail = (() => {
 
   return {
     /** Send welcome email to a new tutor applicant */
-    tutorWelcome:     (data) => post('tutor-welcome',     data),
+    tutorWelcome:              (data) => post('tutor-welcome',              data),
+    /** Send welcome email to a new student */
+    studentWelcome:            (data) => post('student-welcome',            data),
     /** Send "you're live" email after ₦1,000 fee is paid */
-    tutorActivated:   (data) => post('tutor-activated',   data),
+    tutorActivated:            (data) => post('tutor-activated',            data),
     /** Notify tutor their course is live */
-    courseLive:       (data) => post('course-live',       data),
+    courseLive:                (data) => post('course-live',                data),
     /** Notify tutor their course was rejected + reason */
-    courseRejected:   (data) => post('course-rejected',   data),
+    courseRejected:            (data) => post('course-rejected',            data),
     /** Confirm enrollment to a student */
-    studentEnrolled:  (data) => post('student-enrolled',  data),
+    studentEnrolled:           (data) => post('student-enrolled',           data),
     /** Notify student their certificate is ready */
-    certificateReady: (data) => post('certificate-ready', data),
+    certificateReady:          (data) => post('certificate-ready',          data),
     /** Send password reset link */
-    passwordReset:    (data) => post('password-reset',    data),
+    passwordReset:             (data) => post('password-reset',             data),
+    /** Notify tutor of a payment (enrollment or certificate) */
+    tutorPaymentNotification:  (data) => post('tutor-payment-notification', data),
+    /** Notify tutor a student submitted an exam/assignment */
+    submissionNotification:    (data) => post('submission-notification',    data),
   };
 })();
 

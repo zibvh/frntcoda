@@ -557,7 +557,7 @@ terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a></
 </div>
 
 <div id="toast" class="toast"></div>
-
+<script src="email-client.js"></script>
 <script>
 // Cursor
 const cur=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
@@ -846,30 +846,23 @@ window.handleSignup = async function(role) {
 };
 
 
-const EMAILJS_SERVICE_ID        = 'frNtcOda';
-const EMAILJS_TEMPLATE_STUDENT  = 'template_sfr0six';   // your existing student template ID
-const EMAILJS_TEMPLATE_TUTOR    = 'template_tutor_001'; // <-- replace with your new tutor template ID
-const EMAILJS_PUBLIC_KEY        = 'in-7Jzdfq8gQUWxex';
-
+// -- Welcome email via frNtcOda Email Service (Resend) -----------
 async function sendWelcomeEmail(email, firstName, role) {
   try {
-    if (!window.emailjs) {
-      await new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
+    if (role === 'tutor') {
+      await FrntEmail.tutorWelcome({
+        to:           email,
+        toName:       firstName || 'Tutor',
+        dashboardUrl: 'https://frntcoda.onrender.com/tutor-dashboard.html',
       });
-      window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    } else {
+      await FrntEmail.studentWelcome({
+        to:           email,
+        toName:       firstName || 'there',
+        dashboardUrl: 'https://frntcoda.onrender.com/student-dashboard.html',
+      });
     }
-    const templateId = role === 'tutor' ? EMAILJS_TEMPLATE_TUTOR : EMAILJS_TEMPLATE_STUDENT;
-    await window.emailjs.send(EMAILJS_SERVICE_ID, templateId, {
-      to_email:      email,
-      to_name:       firstName || 'User',
-      dashboard_url: role === 'tutor' ? 'tutor-dashboard.html' : 'student-dashboard.html',
-      platform_name: 'frNtcOda',
-    });
-  } catch(e) { console.warn('Welcome email failed:', e); }
+  } catch(e) { console.warn('Welcome email failed (non-critical):', e.message); }
 }
 
 function isValidEmail(email) {
@@ -1156,5 +1149,6 @@ window.handleGithubSignIn = async function(role) {
   }
 };
 </script>
+<script src="email-client.js"></script>
 </body>
 </html>

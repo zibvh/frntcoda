@@ -933,7 +933,7 @@ svg.lucide-icon,[class*="ds-icon"] svg,[class*="stat-icon"] svg,[class*="bnav-ic
     <div id="pay-modal-body"></div>
   </div>
 </div>
-
+<script src="email-client.js"></script>
 <script>
 // Navigation stub — runs synchronously before Firebase module loads.
 // The module's window.showPanel overwrites this once it executes.
@@ -2057,24 +2057,19 @@ window.submitExam = async function() {
       status: 'submitted'
     });
 
-    // Email tutor (theory / file) if EmailJS is configured
+    // Notify tutor of exam/assignment submission via Resend
     if ((lesson.includeTheory || lesson.includeFile) && lesson.tutorEmail) {
       try {
-        if (window.emailjs) {
-          await window.emailjs.send(
-            window.EMAILJS_SERVICE_ID  || 'frNtcOda',
-            window.EMAILJS_TEMPLATE_ID || 'submissions',
-            {
-              to_email:     lesson.tutorEmail,
-              student_name: currentProfile.fullName || 'A student',
-              exam_title:   lesson.title,
-              theory_answer: examAnswers.theoryText  || '(not required)',
-              file_url:      examAnswers.fileUrl     || '(not required)',
-              obj_score:     objScore != null ? objScore + '%' : '(not required)',
-            }
-          );
-        }
-      } catch(_) { console.log('[frNtcOda] EmailJS not configured — answer saved to Firestore only.'); }
+        await FrntEmail.submissionNotification({
+          to:           lesson.tutorEmail,
+          toName:       lesson.tutorName || 'Tutor',
+          studentName:  currentProfile.fullName || 'A student',
+          examTitle:    lesson.title,
+          theoryAnswer: examAnswers.theoryText  || '(not required)',
+          fileUrl:      examAnswers.fileUrl     || '(not required)',
+          objScore:     objScore != null ? objScore + '%' : '(not required)',
+        });
+      } catch(_) { console.log('[frNtcOda] Submission notification failed (non-critical)'); }
     }
 
     // Mark lesson done (always mark done on submission regardless of MCQ score)
@@ -2597,42 +2592,24 @@ function timeAgo(date) {
 
 
 
-const EMAILJS_PUBLIC_KEY  = 'in-7Jzdfq8gQUWxex';
-const EMAILJS_SERVICE_ID  = 'frNtcOda';
-const EMAILJS_TEMPLATE_ID = 'template_t0ik349';
-
-async function loadEmailJS() {
-  if (window.emailjs) return;
-  await new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
-    s.onload = resolve;
-    s.onerror = () => reject(new Error('EmailJS failed to load'));
-    document.head.appendChild(s);
-  });
-  window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-}
-
+// -- Tutor payment notification via frNtcOda Email Service (Resend) --
 async function sendPaymentEmail({ tutorEmail, tutorName, studentName, courseName, amount, tutorShare, platformFee, paymentType, courseId }) {
   if (!tutorEmail) return;
   try {
-    await loadEmailJS();
-    await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email:     tutorEmail,
-      tutor_name:   tutorName  || 'Tutor',
-      student_name: studentName,
-      course_name:  courseName,
-      payment_type: paymentType || 'Course Enrollment',
-      amount:       `₦${amount.toLocaleString()}`,
-      tutor_share:  `₦${tutorShare.toLocaleString()}`,
-      platform_fee: `₦${platformFee.toLocaleString()}`,
-      date:         new Date().toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' }),
-      course_link:  `${window.location.origin}/student-dashboard.html?course=${courseId}`
+    await FrntEmail.tutorPaymentNotification({
+      to:          tutorEmail,
+      toName:      tutorName || 'Tutor',
+      studentName,
+      courseName,
+      paymentType: paymentType || 'Course Enrollment',
+      amount:      '\u20a6' + amount.toLocaleString(),
+      tutorShare:  '\u20a6' + tutorShare.toLocaleString(),
+      platformFee: '\u20a6' + platformFee.toLocaleString(),
+      courseLink:  `${window.location.origin}/student-dashboard.html?course=${courseId}`
     });
     console.log('[frNtcOda] Payment notification sent to', tutorEmail);
   } catch(e) {
-    // Never block the payment flow if email fails
-    console.warn('[frNtcOda] Email notification failed:', e.message);
+    console.warn('[frNtcOda] Payment notification failed (non-critical):', e.message);
   }
 }
 
@@ -2703,19 +2680,6 @@ document.getElementById('pay-modal').addEventListener('click', function(e) {
   }
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-  (function(){
-    var PK = "in-7Jzdfq8gQUWxex";
-    var SID = "frNtcOda";
-    var TID = "submissions";
-    console.log('emailjs is set')
-    if (PK && PK !== "in-7Jzdfq8gQUWxex") {
-      window.emailjs.init({ publicKey: PK });
-    }
-    window.EMAILJS_SERVICE_ID  = SID;
-    window.EMAILJS_TEMPLATE_ID = TID;
-  })();
 
 // ── HIDE / REMOVE COURSE FROM DASHBOARD ──────────────────────────────────────
 // Does NOT delete the enrollment from Firestore — just hides it in the student's view.
@@ -2850,5 +2814,6 @@ if (!navigator.onLine) _showOfflineBanner();
   [500, 1500, 3000, 6000].forEach(function(ms) { setTimeout(check, ms); });
 })();
 </script>
+<script src="email-client.js"></script>
 </body>
 </html>
