@@ -8,8 +8,8 @@
  */
 
 const FrntEmail = (() => {
-  const BASE_URL = 'https://frntcoda-email.onrender.com'; // update after deploy
-  const API_KEY  = 're_ffMUzbMq_EbVxd3Lb4GkTpyPzxLE77ChV';           // replace at build time or set in your config
+  const BASE_URL = 'https://frntcoda-email.onrender.com';
+  const API_KEY  = '670d9d5e2c85f4e8aab027704c38d946'; // replace with your EMAIL_SERVICE_API_KEY value from Render
 
   async function post(endpoint, body) {
     const res = await fetch(`${BASE_URL}/email/${endpoint}`, {
