@@ -1,0 +1,6 @@
+/** Import a Firestore JSON export into MongoDB. Usage: node migrate-firestore.js export.json */
+require('dotenv').config();
+const fs=require('fs');const mongoose=require('mongoose');
+const file=process.argv[2];if(!file){console.error('Usage: node migrate-firestore.js <export.json>');process.exit(1);}
+function model(name){return mongoose.model(`Import_${name}`,new mongoose.Schema({_id:mongoose.Schema.Types.Mixed},{strict:false,collection:name}));}
+(async()=>{try{await mongoose.connect(process.env.MONGODB_URI||'mongodb://127.0.0.1:27017/frntcoda');const raw=JSON.parse(fs.readFileSync(file,'utf8'));const groups=Array.isArray(raw)?Object.fromEntries(raw.map(x=>[x.collection,x.documents||[]])):raw;for(const [name,docs] of Object.entries(groups)){if(!Array.isArray(docs))continue;const M=model(name);const ops=docs.map(d=>{const x={...d};if(x.id){x._id=x.id;delete x.id;}for(const k of ['createdAt','updatedAt','paidAt','submittedAt'])if(typeof x[k]==='string'&&!Number.isNaN(Date.parse(x[k])))x[k]=new Date(x[k]);return {replaceOne:{filter:{_id:x._id},replacement:x,upsert:true}}});if(ops.length)await M.bulkWrite(ops);console.log(`Imported ${ops.length} ${name}`);}await mongoose.disconnect();}catch(e){console.error(e);process.exit(1);}})();
