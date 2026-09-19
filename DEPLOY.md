@@ -178,8 +178,8 @@ Generate a unique random value. Do not reuse your MongoDB password, Paystack key
 For the default Render URL:
 
 ```text
-APP_URL=https://frntcoda.onrender.com
-CORS_ORIGIN=https://frntcoda.onrender.com
+APP_URL=https://frntcoda-k8wx.onrender.com
+CORS_ORIGIN=https://frntcoda-k8wx.onrender.com
 ```
 
 If you use a custom domain instead, use that domain:
@@ -268,7 +268,7 @@ The server should:
 After deployment, open:
 
 ```text
-https://frntcoda.onrender.com/health
+https://frntcoda-k8wx.onrender.com/health
 ```
 
 A healthy response should look similar to:

@@ -17,12 +17,12 @@
 <meta name="keywords" content="frNtcOda, learn to code, Nigeria, online coding courses, HTML, CSS, JavaScript, Python, e-learning, programming, certificates">
 <meta name="author" content="frNtcOda">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://frntcoda.onrender.com/auth.html">
+<link rel="canonical" href="https://frntcoda-k8wx.onrender.com/auth.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Sign In or Sign Up — frNtcOda">
 <meta property="og:description" content="Create your frNtcOda account or sign in to continue learning. Students and tutors welcome.">
-<meta property="og:url" content="https://frntcoda.onrender.com/auth.html">
-<meta property="og:image" content="https://frntcoda.onrender.com/frntcoda.png">
+<meta property="og:url" content="https://frntcoda-k8wx.onrender.com/auth.html">
+<meta property="og:image" content="https://frntcoda-k8wx.onrender.com/frntcoda.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="frNtcOda — Learn To Code">
@@ -31,7 +31,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Sign In or Sign Up — frNtcOda">
 <meta name="twitter:description" content="Create your frNtcOda account or sign in to continue learning. Students and tutors welcome.">
-<meta name="twitter:image" content="https://frntcoda.onrender.com/frntcoda.png">
+<meta name="twitter:image" content="https://frntcoda-k8wx.onrender.com/frntcoda.png">
 <meta name="twitter:site" content="@frntcoda">
 <meta name="theme-color" content="#060D2B">
 <meta name="mobile-web-app-capable" content="yes">
@@ -833,13 +833,13 @@ async function sendWelcomeEmail(email, firstName, role) {
       await FrntEmail.tutorWelcome({
         to:           email,
         toName:       firstName || 'Tutor',
-        dashboardUrl: 'https://frntcoda.onrender.com/tutor-dashboard.html',
+        dashboardUrl: 'https://frntcoda-k8wx.onrender.com/tutor-dashboard.html',
       });
     } else {
       await FrntEmail.studentWelcome({
         to:           email,
         toName:       firstName || 'there',
-        dashboardUrl: 'https://frntcoda.onrender.com/student-dashboard.html',
+        dashboardUrl: 'https://frntcoda-k8wx.onrender.com/student-dashboard.html',
       });
     }
   } catch(e) { console.warn('Welcome email failed (non-critical):', e.message); }
