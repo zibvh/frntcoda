@@ -19,7 +19,17 @@ const PORT=process.env.PORT||3000;
 const JWT_SECRET=process.env.JWT_SECRET||'dev-only-change-me';
 const collections=new Map();
 function model(name){
-  if(!collections.has(name)) collections.set(name,mongoose.model(`Dynamic_${name}`,new mongoose.Schema({_id: mongoose.Schema.Types.Mixed}, {strict:false, collection:name})));
+  if(!collections.has(name)){
+    // Keep compatibility with existing string/number IDs while allowing
+    // MongoDB/Mongoose to generate an ID for newly-created documents.
+    const schema=new mongoose.Schema({
+      _id:{
+        type: mongoose.Schema.Types.Mixed,
+        default:()=>new mongoose.Types.ObjectId()
+      }
+    }, {strict:false, collection:name});
+    collections.set(name,mongoose.model(`Dynamic_${name}`,schema));
+  }
   return collections.get(name);
 }
 const User=model('users');
