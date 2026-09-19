@@ -6,9 +6,21 @@ const jwt=require('jsonwebtoken');
 const cors=require('cors');
 const path=require('path');
 const morgan=require('morgan');
+const adminSdk=require('firebase-admin');
 
 
 const app=express();
+let firebaseAdminReady=false;
+try{
+ if(process.env.FIREBASE_PROJECT_ID&&process.env.FIREBASE_CLIENT_EMAIL&&process.env.FIREBASE_PRIVATE_KEY){
+  adminSdk.initializeApp({credential:adminSdk.credential.cert({
+   projectId:process.env.FIREBASE_PROJECT_ID,
+   clientEmail:process.env.FIREBASE_CLIENT_EMAIL,
+   privateKey:process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g,'\n')
+  })});
+  firebaseAdminReady=true;
+ }
+}catch(e){console.error('Firebase Admin initialization failed:',e.message);}
 const RESEND_API_URL='https://api.resend.com/emails';
 app.use(cors({origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true, credentials:true}));
 app.use(express.json({limit:'10mb'}));
@@ -19,17 +31,7 @@ const PORT=process.env.PORT||3000;
 const JWT_SECRET=process.env.JWT_SECRET||'dev-only-change-me';
 const collections=new Map();
 function model(name){
-  if(!collections.has(name)){
-    // Keep compatibility with existing string/number IDs while allowing
-    // MongoDB/Mongoose to generate an ID for newly-created documents.
-    const schema=new mongoose.Schema({
-      _id:{
-        type: mongoose.Schema.Types.Mixed,
-        default:()=>new mongoose.Types.ObjectId()
-      }
-    }, {strict:false, collection:name});
-    collections.set(name,mongoose.model(`Dynamic_${name}`,schema));
-  }
+  if(!collections.has(name)) collections.set(name,mongoose.model(`Dynamic_${name}`,new mongoose.Schema({_id: mongoose.Schema.Types.Mixed}, {strict:false, collection:name})));
   return collections.get(name);
 }
 const User=model('users');
@@ -40,9 +42,17 @@ const sensitiveUser=['role','status','isVerified','emailVerified','registrationF
 
 function clean(doc){ if(!doc) return doc; const o=doc.toObject?doc.toObject():{...doc}; o.id=String(o._id); delete o._id; delete o.__v; if(o.password) delete o.password; return o; }
 function issue(user){ return jwt.sign({uid:String(user._id),role:user.role,email:user.email},JWT_SECRET,{expiresIn:'7d'}); }
-function auth(req,res,next){
-  const h=req.headers.authorization||''; if(!h.startsWith('Bearer ')) return res.status(401).json({error:'Authentication required'});
-  try { req.auth=jwt.verify(h.slice(7),JWT_SECRET); next(); } catch(e){ return res.status(401).json({error:'Invalid or expired session'}); }
+async function auth(req,res,next){
+ const h=req.headers.authorization||'';
+ if(!h.startsWith('Bearer ')) return res.status(401).json({error:'Authentication required'});
+ if(!firebaseAdminReady) return res.status(503).json({error:'Firebase Admin is not configured on the server'});
+ try{
+  const decoded=await adminSdk.auth().verifyIdToken(h.slice(7));
+  let user=await User.findById(decoded.uid);
+  if(!user&&decoded.email) user=await User.findOne({email:String(decoded.email).toLowerCase()});
+  req.auth={uid:decoded.uid,email:decoded.email,role:user?.role||'student'};
+  req.firebaseUser=decoded; next();
+ }catch(e){return res.status(401).json({error:'Invalid or expired Firebase session'});}
 }
 function admin(req,res,next){ if(req.auth?.role!=='admin') return res.status(403).json({error:'Admin access required'}); next(); }
 function toMongoId(id){ return id; }
