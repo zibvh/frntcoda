@@ -236,14 +236,6 @@ td{padding:.75rem 1.1rem;font-size:.875rem;vertical-align:middle;}
 .modal-footer{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;}
 
 
-/* JSON Import modal styles */
-.tmpl-tab{font-family:var(--mono);font-size:.6rem;padding:.25rem .65rem;border-radius:5px;border:1px solid var(--border);color:var(--gray);background:var(--surface);cursor:pointer;transition:all .2s;}
-.tmpl-tab.active{background:rgba(43,107,255,.15);border-color:rgba(43,107,255,.35);color:var(--blue-glow);}
-.tmpl-tab:hover{color:var(--white);}
-.tmpl-code{font-family:var(--mono);font-size:.62rem;color:rgba(255,255,255,.8);line-height:1.65;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;padding:.75rem;max-height:220px;overflow-y:auto;display:block;margin-bottom:0;}
-.tmpl-copy{position:absolute;top:6px;right:6px;font-family:var(--mono);font-size:.58rem;padding:.2rem .55rem;border-radius:5px;border:1px solid var(--border);background:var(--dark2);color:var(--gray);cursor:pointer;}
-.tmpl-copy:hover{color:var(--white);}
-
 /* toast */
 .toast{
   position:fixed;top:0;left:0;right:0;
@@ -329,23 +321,17 @@ td{padding:.75rem 1.1rem;font-size:.875rem;vertical-align:middle;}
 }
 #offline-banner.show{transform:translateY(0);opacity:1;pointer-events:auto;}
 
-/* ── JSON BUILDER ── */
-.builder-view-toggle{display:flex;gap:.3rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:3px;}
-.bv-btn{flex:1;padding:.3rem .6rem;border:none;border-radius:6px;font-family:var(--mono);font-size:.6rem;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;background:transparent;color:var(--gray);transition:all .2s;}
-.bv-btn.active{background:var(--accent-dim,rgba(43,107,255,.2));color:var(--white);font-weight:600;}
-#json-builder-wrap{display:none;flex-direction:column;flex:1;padding:.75rem;}
-#json-builder-wrap.active{display:flex;}
 #outline-list-wrap{display:flex;flex-direction:column;flex:1;}
-#outline-list-wrap.hidden{display:none;}
-#json-editor{
-  width:100%;flex:1;min-height:260px;resize:vertical;
-  background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:8px;
-  color:#e2e8f0;font-family:var(--mono);font-size:.72rem;line-height:1.6;
-  padding:.75rem;outline:none;tab-size:2;
+.outline-actions{display:flex;align-items:center;gap:.3rem;flex-shrink:0;}
+.outline-move,.outline-edit{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  color:var(--gray);cursor:pointer;padding:.3rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
 }
-#json-editor:focus{border-color:rgba(43,107,255,.5);box-shadow:0 0 0 3px rgba(43,107,255,.1);}
-.json-actions{display:flex;gap:.4rem;margin-top:.5rem;}
-.json-err{font-family:var(--mono);font-size:.65rem;color:#f87171;margin-top:.35rem;min-height:1rem;}
+.outline-move:hover,.outline-edit:hover{color:var(--white);border-color:rgba(255,255,255,.25);}
+.outline-move:disabled{opacity:.25;cursor:not-allowed;}
+.outline-move:disabled:hover{color:var(--gray);border-color:var(--border);}
 </style>
 
 <style>
@@ -763,36 +749,17 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
             <div style="font-family:var(--display);font-size:.9rem;font-weight:700;">Course Outline</div>
             <div style="font-family:var(--mono);font-size:.6rem;color:var(--gray);margin-top:.1rem;" id="outline-count">0 items</div>
           </div>
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <div class="builder-view-toggle">
-              <button class="bv-btn active" id="bv-visual" onclick="switchBuilderView('visual')">⊞ Visual</button>
-              <button class="bv-btn" id="bv-json" onclick="switchBuilderView('json')">{ } JSON</button>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="clearBuilder()">Clear</button>
-          </div>
+          <button class="btn btn-danger btn-sm" onclick="clearBuilder()">Clear</button>
         </div>
         <div id="outline-list-wrap">
           <div class="outline-list" id="outline-list">
             <div class="empty-outline">No items yet<br>Add lessons using<br>the form on the left</div>
           </div>
         </div>
-        <div id="json-builder-wrap">
-          <div style="font-family:var(--mono);font-size:.65rem;color:var(--gray);margin-bottom:.4rem;line-height:1.5;">
-            Edit the JSON directly. Each lesson is an object in the <code style="color:var(--accent);">lessons</code> array.<br>
-            Switch back to Visual to use the form builder. Changes sync both ways.
-          </div>
-          <textarea id="json-editor" spellcheck="false" placeholder='[\n  {\n    "type": "Lesson",\n    "title": "Intro to HTML",\n    "notes": "## Heading\\n\\nYour notes here",\n    "videoUrl": ""\n  }\n]'></textarea>
-          <div class="json-err" id="json-err"></div>
-          <div class="json-actions">
-            <button class="btn btn-primary btn-sm" onclick="applyJSON()" style="flex:1;">✓ Apply JSON</button>
-            <button class="btn btn-ghost btn-sm" onclick="formatJSON()" style="flex:1;">⊡ Format</button>
-          </div>
-        </div>
         <div style="padding:1rem;display:flex;flex-direction:column;gap:.5rem;">
           <button class="btn btn-primary btn-full" onclick="submitCourse()" style="font-size:.85rem;padding:.75rem;">
             Submit for Review →
           </button>
-          <button class="btn btn-ghost btn-full" onclick="openModal('json-import-modal')" style="font-size:.8rem;padding:.65rem;margin-bottom:.25rem;">⬆ Import from JSON</button>
           <button class="btn btn-ghost btn-full" id="save-draft-btn" onclick="saveDraft()" style="font-size:.8rem;padding:.65rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save as Draft
           </button>
@@ -1121,180 +1088,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
     </div>
     <div style="display:flex;gap:.5rem;margin-top:1rem;">
       <button class="btn btn-ghost btn-full" onclick="closeModal('ec-edit-item-modal')">Cancel</button>
-      <button class="btn btn-primary btn-full" onclick="saveEcEditItem()">Save Changes</button>
-    </div>
-  </div>
-</div>
-
-<!-- JSON IMPORT MODAL -->
-<div class="modal-overlay" id="json-import-modal">
-  <div class="modal-sheet" style="max-height:92vh;">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Import Course from JSON</div>
-    <div class="modal-sub">Paste your course JSON below. Your tutor info and status are set automatically — never fill those in.</div>
-
-    <!-- Template accordion -->
-    <div id="template-toggle" style="background:rgba(43,107,255,.06);border:1px solid rgba(43,107,255,.15);border-radius:10px;margin-bottom:1rem;">
-      <button onclick="toggleTemplate()" style="width:100%;background:none;border:none;padding:.75rem 1rem;display:flex;justify-content:space-between;align-items:center;cursor:pointer;color:var(--white);">
-        <span style="font-family:var(--mono);font-size:.68rem;color:var(--blue-glow);text-transform:uppercase;letter-spacing:.08em;">📄 Show JSON Template</span>
-        <span id="template-arrow" style="font-family:var(--mono);font-size:.7rem;color:var(--gray);">▼</span>
-      </button>
-      <div id="template-body" style="display:none;padding:0 1rem 1rem;">
-        <div style="font-family:var(--mono);font-size:.6rem;color:var(--gray);margin-bottom:.5rem;line-height:1.6;">
-          Only fill these fields. Leave out tutorId, tutorName, status, studentsCount — the app fills those automatically from your account.
-        </div>
-        <!-- Tab switcher -->
-        <div style="display:flex;gap:.35rem;margin-bottom:.65rem;flex-wrap:wrap;">
-          <button class="tmpl-tab active" onclick="switchTmplTab('full',this)">Full</button>
-          <button class="tmpl-tab" onclick="switchTmplTab('lesson',this)">Lesson</button>
-          <button class="tmpl-tab" onclick="switchTmplTab('assignment',this)">Assignment</button>
-          <button class="tmpl-tab" onclick="switchTmplTab('exam',this)">Exam</button>
-        </div>
-        <div id="tmpl-full" class="tmpl-pane active" style="position:relative;">
-          <pre class="tmpl-code">{
-  "title": "My Course Title",
-  "language": "JavaScript",
-  "price": 5000,
-  "certFee": 3000,
-  "description": "What students will learn.",
-  "lessons": [
-    {
-      "order": 1,
-      "type": "Lesson",
-      "title": "Introduction",
-      "notes": "Lesson content. **Bold**, `code`, and:\n```\ncode block\n```",
-      "video": "https://youtube.com/watch?v=VIDEO_ID",
-      "resources": [
-        { "label": "MDN Docs", "url": "https://developer.mozilla.org" }
-      ]
-    },
-    {
-      "order": 2,
-      "type": "Assignment",
-      "title": "Module 1 Quiz",
-      "submissionMode": "mcq",
-      "notes": "Answer all questions.",
-      "passScore": 70,
-      "questions": [
-        {
-          "question": "What does HTML stand for?",
-          "options": ["HyperText Markup Language","High Text","Hyper Transfer","None"],
-          "correctIndex": 0
-        }
-      ],
-      "resources": []
-    },
-    {
-      "order": 3,
-      "type": "Exam",
-      "title": "Final Exam",
-      "includeObjective": true,
-      "includeTheory": true,
-      "includeFile": false,
-      "passScore": 70,
-      "questions": [
-        {
-          "question": "Which is a JS data type?",
-          "options": ["string","element","node","selector"],
-          "correctIndex": 0
-        }
-      ],
-      "theoryPrompt": "Explain the difference between let, const and var.",
-      "theoryLength": "medium",
-      "fileInstructions": "",
-      "acceptedFormats": "",
-      "tutorEmail": "you@email.com",
-      "notes": "",
-      "resources": []
-    }
-  ]
-}</pre>
-          <button class="tmpl-copy" onclick="copyTemplate('tmpl-full')">Copy</button>
-        </div>
-        <div id="tmpl-lesson" class="tmpl-pane" style="position:relative;display:none;">
-          <pre class="tmpl-code">{
-  "order": 1,
-  "type": "Lesson",
-  "title": "Lesson Title",
-  "notes": "Content here. **Bold**, `code`",
-  "video": "https://youtube.com/watch?v=VIDEO_ID",
-  "resources": [
-    { "label": "Link Label", "url": "https://example.com" }
-  ]
-}</pre>
-          <button class="tmpl-copy" onclick="copyTemplate('tmpl-lesson')">Copy</button>
-        </div>
-        <div id="tmpl-assignment" class="tmpl-pane" style="position:relative;display:none;">
-          <pre class="tmpl-code">{
-  "order": 1,
-  "type": "Assignment",
-  "title": "Quiz Title",
-  "submissionMode": "mcq",
-  "notes": "Instructions here.",
-  "passScore": 70,
-  "questions": [
-    {
-      "question": "Your question?",
-      "options": ["Option A","Option B","Option C","Option D"],
-      "correctIndex": 0
-    }
-  ],
-  "resources": []
-}
-// correctIndex: 0=A, 1=B, 2=C, 3=D</pre>
-          <button class="tmpl-copy" onclick="copyTemplate('tmpl-assignment')">Copy</button>
-        </div>
-        <div id="tmpl-exam" class="tmpl-pane" style="position:relative;display:none;">
-          <pre class="tmpl-code">{
-  "order": 1,
-  "type": "Exam",
-  "title": "Exam Title",
-  "includeObjective": true,
-  "includeTheory": true,
-  "includeFile": false,
-  "passScore": 70,
-  "questions": [
-    {
-      "question": "MCQ question?",
-      "options": ["A","B","C","D"],
-      "correctIndex": 1
-    }
-  ],
-  "theoryPrompt": "Written question for student.",
-  "theoryLength": "medium",
-  "fileInstructions": "",
-  "acceptedFormats": "PDF, ZIP",
-  "tutorEmail": "you@email.com",
-  "notes": "",
-  "resources": []
-}
-// theoryLength: "short"|"medium"|"long"
-// tutorEmail required if includeTheory or includeFile is true</pre>
-          <button class="tmpl-copy" onclick="copyTemplate('tmpl-exam')">Copy</button>
-        </div>
-        <!-- Field reference -->
-        <div style="margin-top:.85rem;font-family:var(--mono);font-size:.6rem;color:var(--gray);line-height:2;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:.65rem .85rem;">
-          <div style="color:var(--white);margin-bottom:.25rem;font-size:.62rem;">Field Reference</div>
-          <div><span style="color:var(--red-bright);">*required</span> <span style="color:var(--amber);">title</span>, <span style="color:var(--amber);">language</span>, <span style="color:var(--amber);">lessons[]</span></div>
-          <div><span style="color:var(--gray);">optional</span> price (0=free), certFee (0=free cert), description</div>
-          <div><span style="color:var(--gray);">language options:</span> Python · JavaScript · TypeScript · Rust · Go · Java · C++ · Kotlin · PHP · Swift · Solidity · or any custom string</div>
-          <div><span style="color:var(--gray);">type options:</span> "Lesson" · "Assignment" · "Exam" (exact capitalisation)</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Paste area -->
-    <div class="form-group">
-      <label class="form-label">Paste JSON here *</label>
-      <textarea class="form-textarea" id="json-import-input" rows="8" placeholder='{"title":"My Course","language":"JavaScript","price":0,"certFee":0,"description":"...","lessons":[...]}'
-        style="font-family:var(--mono);font-size:.72rem;min-height:140px;"></textarea>
-    </div>
-    <div id="json-import-error" style="display:none;background:rgba(255,10,53,.08);border:1px solid rgba(255,10,53,.2);border-radius:8px;padding:.65rem .9rem;font-family:var(--mono);font-size:.68rem;color:var(--red-bright);margin-bottom:.75rem;"></div>
-    <div id="json-import-preview" style="display:none;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:.75rem 1rem;font-family:var(--mono);font-size:.68rem;color:var(--green);margin-bottom:.75rem;"></div>
-    <div style="display:flex;gap:.5rem;">
-      <button class="btn btn-ghost btn-full" onclick="closeModal('json-import-modal')">Cancel</button>
-      <button class="btn btn-ghost btn-full" onclick="validateImportJSON()">Validate</button>
-      <button class="btn btn-primary btn-full" onclick="importJSON()">Load into Builder</button>
+      <button class="btn btn-primary btn-full" onclick="document.getElementById('ec-edit-item-modal').dataset.target==='builder' ? saveOutlineEditItem() : saveEcEditItem()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -1540,11 +1334,6 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
   window.saveFullEdit    = _notReady;
   window.setEcPricing    = function(){};
   window.openEdit        = _notReady;
-  window.toggleTemplate  = function(){};
-  window.switchTmplTab   = function(){};
-  window.copyTemplate    = function(){};
-  window.validateImportJSON = _notReady;
-  window.importJSON      = _notReady;
   window.handleBannerUpload = function(){};
   window.removeBanner    = function(){};
   // Sidebar visibility - run immediately and on resize
@@ -2277,11 +2066,6 @@ function renderOutline() {
     list.innerHTML='<div class="empty-outline">No items yet<br>Add lessons using<br>the form on the left</div>';
     return;
   }
-  // If JSON view is open, keep it in sync
-  if (_builderView === 'json') {
-    const editor = document.getElementById('json-editor');
-    if (editor) editor.value = JSON.stringify(builderItems, null, 2);
-  }
 
   list.innerHTML = builderItems.map((item,i)=>`
     <div class="outline-item">
@@ -2291,7 +2075,12 @@ function renderOutline() {
         <div class="outline-name">${item.title}</div>
         <div class="outline-type">${item.type}</div>
       </div>
-      <button class="outline-del" onclick="removeItem(${i})"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <div class="outline-actions">
+        <button class="outline-move" title="Move up" ${i===0?'disabled':''} onclick="moveItem(${i},-1)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg></button>
+        <button class="outline-move" title="Move down" ${i===builderItems.length-1?'disabled':''} onclick="moveItem(${i},1)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <button class="outline-edit" title="Edit" onclick="editOutlineItem(${i})"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button>
+        <button class="outline-del" title="Remove" onclick="removeItem(${i})"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
     </div>`).join('');
 }
 
@@ -2301,79 +2090,89 @@ window.removeItem = function(i) {
   renderOutline();
 };
 
-// ── JSON / VISUAL BUILDER TOGGLE ─────────────────────────────────
-let _builderView = 'visual';
-
-window.switchBuilderView = function(view) {
-  _builderView = view;
-  const visualWrap = document.getElementById('outline-list-wrap');
-  const jsonWrap   = document.getElementById('json-builder-wrap');
-  const btnVisual  = document.getElementById('bv-visual');
-  const btnJSON    = document.getElementById('bv-json');
-
-  if (view === 'json') {
-    // Sync current builderItems → JSON editor
-    const editor = document.getElementById('json-editor');
-    editor.value = JSON.stringify(builderItems, null, 2);
-    document.getElementById('json-err').textContent = '';
-    visualWrap.classList.add('hidden');
-    jsonWrap.classList.add('active');
-    btnVisual.classList.remove('active');
-    btnJSON.classList.add('active');
-    editor.focus();
-  } else {
-    visualWrap.classList.remove('hidden');
-    jsonWrap.classList.remove('active');
-    btnVisual.classList.add('active');
-    btnJSON.classList.remove('active');
-    renderOutline();
-  }
+window.moveItem = function(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= builderItems.length) return;
+  const tmp = builderItems[i];
+  builderItems[i] = builderItems[j];
+  builderItems[j] = tmp;
+  renderOutline();
 };
 
-window.applyJSON = function() {
-  const editor = document.getElementById('json-editor');
-  const errEl  = document.getElementById('json-err');
-  errEl.textContent = '';
-  let parsed;
-  try {
-    parsed = JSON.parse(editor.value);
-  } catch(e) {
-    errEl.textContent = '✗ Invalid JSON: ' + e.message;
-    return;
+// ── EDIT AN ITEM ALREADY IN THE OUTLINE ──────────────────────────
+// Reuses the same edit-item modal used for editing a published course
+// (ec-edit-item-modal), but saves back into builderItems for a course
+// that's still being built.
+let outlineEditingIdx = null;
+
+window.editOutlineItem = function(idx) {
+  const item = builderItems[idx];
+  if (!item) return;
+  outlineEditingIdx = idx;
+  document.getElementById('ec-edit-type').textContent = item.type;
+  document.getElementById('ec-edit-title-input').value = item.title || '';
+
+  const isLesson     = item.type === 'Lesson';
+  const isAssignment = item.type === 'Assignment';
+  const isExam       = item.type === 'Exam';
+
+  document.getElementById('ec-edit-lesson-sec').style.display     = isLesson ? 'block' : 'none';
+  document.getElementById('ec-edit-assignment-sec').style.display = isAssignment ? 'block' : 'none';
+  document.getElementById('ec-edit-exam-sec').style.display       = isExam ? 'block' : 'none';
+
+  if (isLesson) {
+    document.getElementById('ec-edit-notes').value = item.notes || '';
+    document.getElementById('ec-edit-video').value = item.video || '';
   }
-  if (!Array.isArray(parsed)) {
-    errEl.textContent = '✗ JSON must be an array of lesson objects [ {...}, {...} ]';
-    return;
+  if (isAssignment) {
+    document.getElementById('ec-edit-a-desc').value = item.notes || '';
+    document.getElementById('ec-edit-a-pass').value = item.passScore || 70;
+    ecEditQuestions = JSON.parse(JSON.stringify(item.questions || []));
+    renderEcEditQList();
   }
-  // Validate each item has at least a title
-  const invalid = parsed.findIndex(item => !item.title || typeof item.title !== 'string');
-  if (invalid !== -1) {
-    errEl.textContent = '✗ Item ' + (invalid+1) + ' is missing a "title" field';
-    return;
+  if (isExam) {
+    document.getElementById('ec-edit-ex-pass').value = item.passScore || 70;
+    document.getElementById('ec-edit-ex-theory').checked = !!item.includeTheory;
+    document.getElementById('ec-edit-ex-file').checked   = !!item.includeFile;
+    document.getElementById('ec-edit-ex-theory-prompt').value = item.theoryPrompt || '';
+    document.getElementById('ec-edit-ex-tutor-email').value   = item.tutorEmail || '';
+    document.getElementById('ec-edit-ex-theory-row').style.display = item.includeTheory ? 'block' : 'none';
+    ecEditQuestions = JSON.parse(JSON.stringify(item.questions || []));
+    renderEcEditQList();
   }
-  builderItems = parsed.map((item, i) => ({
-    type: item.type || 'Lesson',
-    title: item.title,
-    order: i + 1,
-    ...item,
-  }));
-  errEl.textContent = '';
-  document.getElementById('outline-count').textContent = builderItems.length + ' item' + (builderItems.length===1?'':'s');
-  showToast('JSON applied — ' + builderItems.length + ' items loaded ✓', 'success');
-  // Switch back to visual to confirm
-  switchBuilderView('visual');
+
+  // Redirect Save to write back into builderItems instead of ecBuilderItems
+  ecEditingIdx = null;
+  document.getElementById('ec-edit-item-modal').dataset.target = 'builder';
+  openModal('ec-edit-item-modal');
 };
 
-window.formatJSON = function() {
-  const editor = document.getElementById('json-editor');
-  const errEl  = document.getElementById('json-err');
-  try {
-    const parsed = JSON.parse(editor.value);
-    editor.value = JSON.stringify(parsed, null, 2);
-    errEl.textContent = '';
-  } catch(e) {
-    errEl.textContent = '✗ Cannot format — fix JSON errors first: ' + e.message;
+window.saveOutlineEditItem = function() {
+  if (outlineEditingIdx === null) return;
+  const item = builderItems[outlineEditingIdx];
+  item.title = document.getElementById('ec-edit-title-input')?.value?.trim() || item.title;
+
+  if (item.type === 'Lesson') {
+    item.notes = document.getElementById('ec-edit-notes')?.value || '';
+    item.video = document.getElementById('ec-edit-video')?.value || '';
+  } else if (item.type === 'Assignment') {
+    item.notes     = document.getElementById('ec-edit-a-desc')?.value || '';
+    item.passScore = Number(document.getElementById('ec-edit-a-pass')?.value || 70);
+    item.questions = [...ecEditQuestions];
+  } else if (item.type === 'Exam') {
+    item.passScore     = Number(document.getElementById('ec-edit-ex-pass')?.value || 70);
+    item.includeTheory = document.getElementById('ec-edit-ex-theory')?.checked || false;
+    item.includeFile   = document.getElementById('ec-edit-ex-file')?.checked || false;
+    item.theoryPrompt  = document.getElementById('ec-edit-ex-theory-prompt')?.value?.trim() || '';
+    item.tutorEmail    = document.getElementById('ec-edit-ex-tutor-email')?.value?.trim() || '';
+    item.questions     = [...ecEditQuestions];
   }
+
+  builderItems[outlineEditingIdx] = item;
+  outlineEditingIdx = null;
+  renderOutline();
+  closeModal('ec-edit-item-modal');
+  showToast('Item updated', 'success');
 };
 
 window.clearBuilder = function(confirmed) {
@@ -3014,109 +2813,6 @@ function showEcBanner(url) {
   if (label)   label.style.display = 'none';
 }
 
-// ── JSON TEMPLATE HELPER ───────────────────────────────────────────
-window.toggleTemplate = function() {
-  const body = document.getElementById('template-body');
-  const arrow = document.getElementById('template-arrow');
-  if (!body) return;
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  if (arrow) arrow.textContent = open ? '▼' : '▲';
-};
-
-window.switchTmplTab = function(tab, btn) {
-  document.querySelectorAll('.tmpl-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tmpl-pane').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
-  if (btn) btn.classList.add('active');
-  const pane = document.getElementById('tmpl-' + tab);
-  if (pane) { pane.style.display = 'block'; pane.classList.add('active'); }
-};
-
-window.copyTemplate = function(paneId) {
-  const pre = document.querySelector('#' + paneId + ' .tmpl-code');
-  if (!pre) return;
-  navigator.clipboard.writeText(pre.textContent).then(() => showToast('Template copied!', 'success'));
-};
-
-// ── JSON IMPORTER ─────────────────────────────────────────────────
-window.validateImportJSON = function() {
-  const errEl = document.getElementById('json-import-error');
-  const prevEl = document.getElementById('json-import-preview');
-  const raw = document.getElementById('json-import-input')?.value?.trim();
-  errEl.style.display = 'none'; prevEl.style.display = 'none';
-  if (!raw) { errEl.textContent = 'Paste your JSON first.'; errEl.style.display = 'block'; return null; }
-  let parsed;
-  try { parsed = JSON.parse(raw); } catch(e) { errEl.textContent = 'Invalid JSON: ' + e.message; errEl.style.display = 'block'; return null; }
-  // Validate required fields
-  const errs = [];
-  if (!parsed.title?.trim()) errs.push('Missing "title"');
-  if (!parsed.language?.trim()) errs.push('Missing "language"');
-  if (!Array.isArray(parsed.lessons) || parsed.lessons.length === 0) errs.push('Missing or empty "lessons" array');
-  if (errs.length) { errEl.innerHTML = errs.join('<br>'); errEl.style.display = 'block'; return null; }
-  // Validate each lesson
-  const lessonErrs = [];
-  (parsed.lessons || []).forEach((l, i) => {
-    const idx = i + 1;
-    if (!l.type || !['Lesson','Assignment','Exam'].includes(l.type)) lessonErrs.push(`Lesson ${idx}: type must be "Lesson", "Assignment", or "Exam"`);
-    if (!l.title?.trim()) lessonErrs.push(`Lesson ${idx}: missing title`);
-    if (l.type === 'Assignment' && (!l.questions || l.questions.length === 0)) lessonErrs.push(`Lesson ${idx} (Assignment): needs at least 1 question`);
-    if (l.type === 'Exam' && l.includeObjective && (!l.questions || l.questions.length === 0)) lessonErrs.push(`Lesson ${idx} (Exam): includeObjective is true but no questions provided`);
-    if (l.type === 'Exam' && (l.includeTheory || l.includeFile) && !l.tutorEmail?.trim()) lessonErrs.push(`Lesson ${idx} (Exam): tutorEmail required when includeTheory or includeFile is true`);
-  });
-  if (lessonErrs.length) { errEl.innerHTML = lessonErrs.join('<br>'); errEl.style.display = 'block'; return null; }
-  // Show preview
-  const lessonCount = (parsed.lessons||[]).filter(l=>l.type==='Lesson').length;
-  const asnCount    = (parsed.lessons||[]).filter(l=>l.type==='Assignment').length;
-  const examCount   = (parsed.lessons||[]).filter(l=>l.type==='Exam').length;
-  prevEl.innerHTML = `✓ Valid JSON — <strong style="color:var(--white);">${parsed.title}</strong> · ${parsed.language} · ${parsed.lessons.length} items (${lessonCount} lessons, ${asnCount} assignments, ${examCount} exams) · ${parsed.price > 0 ? '₦'+Number(parsed.price).toLocaleString() : 'Free'}`;
-  prevEl.style.display = 'block';
-  return parsed;
-};
-
-window.importJSON = function() {
-  const parsed = validateImportJSON();
-  if (!parsed) return;
-  // Strip system fields — always injected by the app
-  const { tutorId, tutorName, tutorInitials, status, studentsCount, rating, ratingCount, createdAt, updatedAt, ...safeCourse } = parsed;
-  // Load into builder
-  document.getElementById('bc-title').value = safeCourse.title || '';
-  document.getElementById('bc-desc').value  = safeCourse.description || '';
-  // Language
-  const knownLangs = ['Python','JavaScript','TypeScript','Rust','Go','Java','C++','Kotlin','PHP','Swift','Solidity'];
-  const langSel = document.getElementById('bc-lang');
-  if (knownLangs.includes(safeCourse.language)) {
-    langSel.value = safeCourse.language;
-    document.getElementById('bc-lang-custom').style.display = 'none';
-  } else {
-    langSel.value = 'other';
-    document.getElementById('bc-lang-custom').style.display = 'block';
-    document.getElementById('bc-lang-custom').value = safeCourse.language || '';
-  }
-  // Pricing
-  if (safeCourse.price && safeCourse.price > 0) {
-    if (window.setPricing) window.setPricing('paid');
-    document.getElementById('bc-fee').value = safeCourse.price;
-  } else {
-    if (window.setPricing) window.setPricing('free');
-  }
-  document.getElementById('bc-cert-fee').value = safeCourse.certFee || '';
-  // Load lessons into builder
-  builderItems = (safeCourse.lessons || []).map((l, i) => ({
-    ...l,
-    order: i + 1,
-    resources: l.resources || []
-  }));
-  renderOutline();
-  closeModal('json-import-modal');
-  document.getElementById('json-import-input').value = '';
-  document.getElementById('json-import-error').style.display = 'none';
-  document.getElementById('json-import-preview').style.display = 'none';
-  showPanel('builder');
-  showToast(`Loaded ${builderItems.length} items from JSON — review and submit when ready`, 'success');
-};
-
-
-
 // ── EDIT INDIVIDUAL LESSON / ASSIGNMENT / EXAM IN EC BUILDER ──────
 let ecEditingIdx = null;
 
@@ -3158,6 +2854,7 @@ window.ecEditItem = function(idx) {
     renderEcEditQList();
   }
 
+  document.getElementById('ec-edit-item-modal').dataset.target = 'course';
   openModal('ec-edit-item-modal');
 };
 
