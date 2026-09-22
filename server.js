@@ -41,7 +41,6 @@ const ownerFields={enrollments:'studentId',certificates:'studentId',submissions:
 const sensitiveUser=['role','status','isVerified','emailVerified','registrationFeePaid','registrationFeeRef','paystackSubaccountCode','approvedAt','statusUpdatedAt'];
 
 function clean(doc){ if(!doc) return doc; const o=doc.toObject?doc.toObject():{...doc}; o.id=String(o._id); delete o._id; delete o.__v; if(o.password) delete o.password; return o; }
-function issue(user){ return jwt.sign({uid:String(user._id),role:user.role,email:user.email},JWT_SECRET,{expiresIn:'7d'}); }
 async function auth(req,res,next){
  const h=req.headers.authorization||'';
  if(!h.startsWith('Bearer ')) return res.status(401).json({error:'Authentication required'});
@@ -55,6 +54,19 @@ async function auth(req,res,next){
  }catch(e){return res.status(401).json({error:'Invalid or expired Firebase session'});}
 }
 function admin(req,res,next){ if(req.auth?.role!=='admin') return res.status(403).json({error:'Admin access required'}); next(); }
+// Best-effort Firebase auth: verifies the ID token if present, but doesn't
+// reject the request if it's missing/invalid (used on public-ish GET routes).
+async function optionalAuth(req){
+  const h=req.headers.authorization||'';
+  if(!h.startsWith('Bearer ')) return null;
+  if(!firebaseAdminReady) return null;
+  try{
+    const decoded=await adminSdk.auth().verifyIdToken(h.slice(7));
+    let user=await User.findById(decoded.uid);
+    if(!user&&decoded.email) user=await User.findOne({email:String(decoded.email).toLowerCase()});
+    return {uid:decoded.uid,email:decoded.email,role:user?.role||'student'};
+  }catch(e){ return null; }
+}
 function toMongoId(id){ return id; }
 function sanitizeQuery(q){
   const out={};
@@ -100,27 +112,6 @@ function canWrite(col,req,data,existing){
   return false;
 }
 
-app.post('/api/auth/signup',async(req,res)=>{
-  try{
-    const {email,password,...profile}=req.body; if(!email||!password||password.length<6) return res.status(400).json({error:'Valid email and password (6+ characters) are required'});
-    const normalized=email.trim().toLowerCase(); if(await User.findOne({email:normalized})||await PendingUser.findOne({email:normalized})) return res.status(409).json({error:'An account with this email already exists.'});
-    const hash=await bcrypt.hash(password,12); const uid=new mongoose.Types.ObjectId();
-    const doc={_id:uid,uid:String(uid),email:normalized,password:hash,...profile,createdAt:new Date()};
-    await PendingUser.create(doc); const user={...doc}; delete user.password;
-    const token=issue({...doc,_id:uid}); res.status(201).json({user:clean(user),token,pending:true});
-  }catch(e){res.status(500).json({error:e.message});}
-});
-app.post('/api/auth/login',async(req,res)=>{
-  try{
-    const email=(req.body.email||'').trim().toLowerCase(), password=req.body.password||'';
-    let u=await User.findOne({email}); let pending=false;
-    if(!u){u=await PendingUser.findOne({email}); pending=!!u;}
-    if(!u||!(await bcrypt.compare(password,u.password||''))) return res.status(401).json({error:'Email or password is incorrect.'});
-    if(pending) return res.status(403).json({error:'Please verify your email before logging in.'});
-    if(u.status==='suspended') return res.status(403).json({error:'Account suspended. Contact support.'});
-    res.json({user:clean(u),token:issue(u)});
-  }catch(e){res.status(500).json({error:e.message});}
-});
 app.get('/api/auth/me',auth,async(req,res)=>{const u=await User.findById(req.auth.uid); if(!u)return res.status(404).json({error:'User not found'}); res.json({user:clean(u)});});
 app.post('/api/auth/profile',auth,async(req,res)=>{
   try{
@@ -184,7 +175,7 @@ app.get('/api/auth/verify-email/confirm',async(req,res)=>{
 app.get('/api/:collection',async(req,res)=>{
   const col=req.params.collection; if(!allowedCollections.includes(col)) return res.status(404).json({error:'Unknown collection'});
   try{
-    let a=req.auth; const h=req.headers.authorization||''; if(h.startsWith('Bearer ')){try{a=jwt.verify(h.slice(7),JWT_SECRET)}catch{}}
+    const a=await optionalAuth(req);
     if(!a && col!=='courses') return res.status(401).json({error:'Authentication required'});
     const filter=sanitizeQuery(req.query); if(!a && col==='courses') filter.status='live';
     if(a && a.role==='tutor' && ['enrollments','submissions','examSubmissions'].includes(col)){
@@ -195,7 +186,7 @@ app.get('/api/:collection',async(req,res)=>{
     res.json(docs.filter(d=>!a ? (col==='courses' && d.status==='live') : canReadCollection(col,{auth:a},d)).map(clean));
   }catch(e){res.status(500).json({error:e.message});}
 });
-app.get('/api/:collection/:id',async(req,res)=>{const col=req.params.collection;if(!allowedCollections.includes(col))return res.status(404).json({error:'Unknown collection'});try{let a;const h=req.headers.authorization||'';if(h.startsWith('Bearer ')){try{a=jwt.verify(h.slice(7),JWT_SECRET)}catch{}}const d=await model(col).findById(toMongoId(req.params.id));if(!d||(!a && !(col==='courses'&&d.status==='live'))||(a&&!canReadCollection(col,{auth:a},d)))return res.status(404).json({error:'Not found'});res.json(clean(d));}catch(e){res.status(400).json({error:'Invalid id'});}});
+app.get('/api/:collection/:id',async(req,res)=>{const col=req.params.collection;if(!allowedCollections.includes(col))return res.status(404).json({error:'Unknown collection'});try{const a=await optionalAuth(req);const d=await model(col).findById(toMongoId(req.params.id));if(!d||(!a && !(col==='courses'&&d.status==='live'))||(a&&!canReadCollection(col,{auth:a},d)))return res.status(404).json({error:'Not found'});res.json(clean(d));}catch(e){res.status(400).json({error:'Invalid id'});}});
 app.post('/api/:collection',auth,async(req,res)=>{
   const col=req.params.collection;
   if(!allowedCollections.includes(col))return res.status(404).json({error:'Unknown collection'});
