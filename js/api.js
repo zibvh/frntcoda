@@ -56,6 +56,7 @@ export const serverTimestamp=()=>({__serverTimestamp:true});
 export const initializeApp=()=>firebaseApp;
 export const getApps=()=>[firebaseApp];
 export const getFirestore=()=>({});
+export const getMongoDB=()=>({});
 
 export function collection(_db,name){return {kind:'collection',name};}
 export function doc(_db,col,id){return {kind:'doc',collection:col,id};}
@@ -85,7 +86,7 @@ export async function fetchSignInMethodsForEmail(_auth,email){return firebaseFet
 export {GoogleAuthProvider,GithubAuthProvider};
 export async function signInWithPopup(_auth,provider){const out=await firebaseSignInWithPopup(firebaseAuth,provider);const token=await out.user.getIdToken();localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(USER_KEY,JSON.stringify(userObj(out.user)));return {user:userObj(out.user)};}
 export async function createAuthProfile(profile){
-  return request('/auth/profile',{method:'POST',body:JSON.stringify(profile)});
+  return request('/auth/profile',{method:'POST',body:JSON.stringify(resolve(profile))});
 }
 
 export function updateProfile(user,data){return request(`/users/${user.uid}`,{method:'PATCH',body:JSON.stringify(data)});}
