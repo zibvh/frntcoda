@@ -1,4 +1,4 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
+import { initializeApp as firebaseInitializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
 import {
   getAuth as firebaseGetAuth,
   onAuthStateChanged as firebaseOnAuthStateChanged,
@@ -22,7 +22,7 @@ const firebaseConfig = {
   appId: "1:564512970305:web:d7fd66bdcf6b8268d4d8c0"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
+const firebaseApp = firebaseInitializeApp(firebaseConfig);
 const firebaseAuth = firebaseGetAuth(firebaseApp);
 const API_BASE = window.API_BASE_URL || '/api';
 const TOKEN_KEY='frntcoda_token';
