@@ -81,3 +81,5 @@ export async function createAuthProfile(profile){
 }
 
 export function updateProfile(user,data){return request(`/users/${user.uid}`,{method:'PATCH',body:JSON.stringify(data)});}
+
+export function authErrorMessage(e){ return e?.message || e?.code || 'Authentication failed'; }

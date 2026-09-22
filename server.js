@@ -133,6 +133,9 @@ app.post('/api/auth/profile',auth,async(req,res)=>{
     const email=String(req.auth.email||req.body.email||'').trim().toLowerCase();
     if(!email) return res.status(400).json({error:'Authenticated account has no email address.'});
     const data={...req.body,uid,email,role};
+    // Firebase UID is the canonical account ID. Keep it as MongoDB _id so
+    // getDoc('/users/<firebaseUid>') and pending-user promotion use the same ID.
+    data._id=uid;
     delete data.pending;
     delete data.password;
     // Never allow the client to elevate its own account. Tutor accounts remain pending.
