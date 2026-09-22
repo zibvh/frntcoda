@@ -14,7 +14,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyATtx9-URlB2-ZKc_4eIlr8Qxg_dlJAQ",
+  apiKey: "AIzaSyATtx9-URlB2-ZKc_4eXIlr8lQxg_dlJAQ",
   authDomain: "frnt-coda.firebaseapp.com",
   projectId: "frnt-coda",
   storageBucket: "frnt-coda.firebasestorage.app",
