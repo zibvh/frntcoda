@@ -31,7 +31,7 @@ const PORT=process.env.PORT||3000;
 const JWT_SECRET=process.env.JWT_SECRET||'dev-only-change-me';
 const collections=new Map();
 function model(name){
-  if(!collections.has(name)) collections.set(name,mongoose.model(`Dynamic_${name}`,new mongoose.Schema({_id: mongoose.Schema.Types.Mixed}, {strict:false, collection:name})));
+  if(!collections.has(name)) collections.set(name,mongoose.model(`Dynamic_${name}`,new mongoose.Schema({_id: {type: mongoose.Schema.Types.Mixed, default: () => new mongoose.Types.ObjectId()}}, {strict:false, collection:name})));
   return collections.get(name);
 }
 const User=model('users');
@@ -100,6 +100,18 @@ function canWrite(col,req,data,existing){
   return false;
 }
 
+app.post('/api/auth/profile',auth,async(req,res)=>{
+  try{
+    const role=req.body.role==='tutor'?'tutor':'student';
+    const existing=await User.findById(req.auth.uid);
+    if(existing) return res.json({user:clean(existing)});
+    const name=(req.body.fullName||'').trim();
+    const doc={_id:req.auth.uid,uid:req.auth.uid,email:String(req.auth.email||req.body.email||'').toLowerCase(),firstName:req.body.firstName||'',lastName:req.body.lastName||'',fullName:name||`${req.body.firstName||''} ${req.body.lastName||''}`.trim(),phone:req.body.phone||'',role,status:role==='tutor'?'pending':'active',emailVerified:req.firebaseUser?.email_verified===true||req.body.emailVerified===true,provider:req.body.provider||'password',createdAt:new Date()};
+    if(role==='tutor'){doc.specialisation=req.body.specialisation||'';doc.experience=req.body.experience||'';doc.registrationFeeRef=null;}
+    await User.create(doc);
+    res.status(201).json({user:clean(doc)});
+  }catch(e){console.error('Firebase profile creation failed:',e);res.status(500).json({error:e.message});}
+});
 app.post('/api/auth/signup',async(req,res)=>{
   try{
     const {email,password,...profile}=req.body; if(!email||!password||password.length<6) return res.status(400).json({error:'Valid email and password (6+ characters) are required'});

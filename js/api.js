@@ -1,79 +1,29 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
-import {
-  getAuth as firebaseGetAuth,
-  onAuthStateChanged as firebaseOnAuthStateChanged,
-  signInWithEmailAndPassword as firebaseLogin,
-  createUserWithEmailAndPassword as firebaseSignup,
-  signOut as firebaseSignOut,
-  sendEmailVerification as firebaseSendEmailVerification,
-  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
-  fetchSignInMethodsForEmail as firebaseFetchSignInMethodsForEmail,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  signInWithPopup as firebaseSignInWithPopup
-} from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth as fbGetAuth, onAuthStateChanged as fbOnAuthStateChanged, signInWithEmailAndPassword as fbLogin, createUserWithEmailAndPassword as fbSignup, signOut as fbSignOut, sendEmailVerification as fbVerify, sendPasswordResetEmail as fbReset, GoogleAuthProvider, GithubAuthProvider, signInWithPopup as fbPopup } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyATtx9-URlB2-ZKc_4eXIlr8Qxg_dlJAQ",
-  authDomain: "frnt-coda.firebaseapp.com",
-  projectId: "frnt-coda",
-  storageBucket: "frnt-coda.firebasestorage.app",
-  messagingSenderId: "564512970305",
-  appId: "1:564512970305:web:d7fd66bdcf6b8268d4d8c0"
-};
-
-const firebaseApp = initializeApp(firebaseConfig);
-const firebaseAuth = firebaseGetAuth(firebaseApp);
-const API_BASE = window.API_BASE_URL || '/api';
-const TOKEN_KEY='frntcoda_token';
-const USER_KEY='frntcoda_user';
-
-async function request(path, options={}){
-  const headers={'Content-Type':'application/json',...(options.headers||{})};
-  let token=localStorage.getItem(TOKEN_KEY);
-  if(firebaseAuth.currentUser){
-    try {
-      token=await firebaseAuth.currentUser.getIdToken();
-      localStorage.setItem(TOKEN_KEY,token);
-    } catch {}
-  }
-  if(token) headers.Authorization=`Bearer ${token}`;
-  const res=await fetch(API_BASE+path,{...options,headers});
-  let data={}; try{data=await res.json();}catch{}
-  if(!res.ok){const e=new Error(data.error||`Request failed (${res.status})`);e.status=res.status;e.code=data.code||'api/error';throw e;}
-  return data;
-}
-
+const firebaseConfig={apiKey:"AIzaSyATtx9-URlB2-ZKc_4eIlr8Qxg_dlJAQ",authDomain:"frnt-coda.firebaseapp.com",projectId:"frnt-coda",storageBucket:"frnt-coda.firebasestorage.app",messagingSenderId:"564512970305",appId:"1:564512970305:web:d7fd66bdcf6b8268d4d8c0"};
+const app=initializeApp(firebaseConfig); const auth=fbGetAuth(app); const TOKEN='frntcoda_token'; const USER='frntcoda_user';
+export const initializeAppCompat=()=>app; export {GoogleAuthProvider,GithubAuthProvider}; export const getAuth=()=>auth; export const getFirestore=()=>({}); export const enableNetwork=async()=>{};
+export const collection=(_db,name)=>({kind:'collection',name}); export const doc=(_db,collection,id)=>({kind:'doc',collection,id});
+export const where=(field,op,value)=>({field,op,value}); export const orderBy=(field,direction='asc')=>({field,op:'orderBy',value:direction}); export const limit=n=>({field:'__limit',op:'limit',value:n}); export const query=(ref,...constraints)=>({kind:'query',name:ref.name,constraints});
+const cleanUser=u=>u?{uid:u.uid,id:u.uid,email:u.email||'',displayName:u.displayName||'',photoURL:u.photoURL||'',emailVerified:!!u.emailVerified,providerId:u.providerData?.[0]?.providerId||''}:null;
+async function api(path,options={}){let token=localStorage.getItem(TOKEN);if(auth.currentUser)try{token=await auth.currentUser.getIdToken();localStorage.setItem(TOKEN,token);}catch{}const headers={'Content-Type':'application/json',...(options.headers||{})};if(token)headers.Authorization=`Bearer ${token}`;const r=await fetch('/api'+path,{...options,headers});const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||`Request failed (${r.status})`);e.status=r.status;e.code=d.code||'api/error';throw e;}return d;}
+export const getIdToken=async()=>auth.currentUser?.getIdToken();
+export async function getDoc(ref){try{const d=await api(`/${ref.collection}/${encodeURIComponent(ref.id)}`);return{id:d.id||ref.id,exists:()=>true,data:()=>({...d})};}catch(e){if(e.status===404)return{id:ref.id,exists:()=>false,data:()=>undefined};throw e;}}
+export async function getDocs(ref){const name=ref.name||ref.collection;const p=new URLSearchParams();for(const c of ref.constraints||[]){if(c.op==='orderBy')p.set('sort',(c.value==='desc'?'-':'')+c.field);else if(c.op==='limit')p.set('limit',c.value);else{p.set(c.field,typeof c.value==='object'?JSON.stringify(c.value):String(c.value));if(c.op&&c.op!=='==')p.set(c.field+'__op',c.op);}}const d=await api(`/${name}?${p}`);return{docs:d.map(x=>({id:x.id,exists:()=>true,data:()=>({...x})})),empty:!d.length,size:d.length,forEach(fn){this.docs.forEach(fn)}};}
+const resolve=v=>{if(v&&typeof v==='object'){if(v.__serverTimestamp)return new Date().toISOString();if(Array.isArray(v))return v.map(resolve);const o={};for(const[k,x]of Object.entries(v))o[k]=resolve(x);return o;}return v;};
 export const serverTimestamp=()=>({__serverTimestamp:true});
-export const initializeApp=()=>firebaseApp;
-export const getApps=()=>[firebaseApp];
-export const getFirestore=()=>({});
-
-export function collection(_db,name){return {kind:'collection',name};}
-export function doc(_db,col,id){return {kind:'doc',collection:col,id};}
-export function where(field,op,value){return {field,op,value};}
-export function orderBy(field,direction='asc'){return {field,op:'orderBy',value:direction};}
-export function limit(n){return {field:'__limit',op:'limit',value:n};}
-export function query(ref,...constraints){return {kind:'query',name:ref.name,constraints};}
-function encode(v){return encodeURIComponent(typeof v==='object'?JSON.stringify(v):String(v));}
-export async function getDoc(ref){try{const data=await request(`/${ref.collection}/${encode(ref.id)}`);return {id:data.id,exists:()=>true,data:()=>({...data})};}catch(e){if(e.status===404)return {id:ref.id,exists:()=>false,data:()=>undefined};throw e;}}
-export async function getDocs(ref){const name=ref.name||ref.collection;const constraints=ref.constraints||[];const params=new URLSearchParams();for(const c of constraints){if(c.op==='orderBy')params.set('sort',(c.value==='desc'?'-':'')+c.field);else if(c.op==='limit')params.set('limit',c.value);else {params.set(c.field,typeof c.value==='object'?JSON.stringify(c.value):String(c.value));if(c.op&&c.op!=='==')params.set(c.field+'__op',c.op);}}const data=await request(`/${name}?${params}`);return {docs:data.map(d=>({id:d.id,exists:()=>true,data:()=>({...d})})),empty:data.length===0,size:data.length,forEach(fn){this.docs.forEach(fn)}};}
-export async function addDoc(ref,data){const out=await request(`/${ref.name}`,{method:'POST',body:JSON.stringify(resolve(data))});return {id:out.id};}
-export async function setDoc(ref,data,options={}){if(options.merge)return updateDoc(ref,data);const existing=await getDoc(ref);if(existing.exists())return updateDoc(ref,data);return request(`/${ref.collection}`,{method:'POST',body:JSON.stringify({...resolve(data),_id:ref.id})});}
-export async function updateDoc(ref,data){return request(`/${ref.collection}/${encode(ref.id)}`,{method:'PATCH',body:JSON.stringify(resolve(data))});}
-export async function deleteDoc(ref){return request(`/${ref.collection}/${encode(ref.id)}`,{method:'DELETE'});}
-function resolve(v){if(v&&typeof v==='object'){if(v.__serverTimestamp)return new Date().toISOString();if(Array.isArray(v))return v.map(resolve);const o={};for(const [k,x] of Object.entries(v))o[k]=resolve(x);return o;}return v;}
-
-function userObj(u){return u?{uid:u.uid||u.id||'',id:u.uid||u.id||'',email:u.email||'',displayName:u.displayName||'',photoURL:u.photoURL||'',emailVerified:!!u.emailVerified,providerId:u.providerData?.[0]?.providerId||''}:null;}
-let listeners=[];
-export const getAuth=()=>firebaseAuth;
-export async function signInWithEmailAndPassword(_auth,email,password){const out=await firebaseLogin(firebaseAuth,email,password);const token=await out.user.getIdToken();localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(USER_KEY,JSON.stringify(userObj(out.user)));return {user:userObj(out.user)};}
-export async function createUserWithEmailAndPassword(_auth,email,password){const out=await firebaseSignup(firebaseAuth,email,password);const token=await out.user.getIdToken();localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(USER_KEY,JSON.stringify(userObj(out.user)));return {user:userObj(out.user)};}
-export async function signOut(){await firebaseSignOut(firebaseAuth);localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(USER_KEY);}
-export function onAuthStateChanged(_auth,cb){return firebaseOnAuthStateChanged(firebaseAuth,async u=>{if(u){try{localStorage.setItem(TOKEN_KEY,await u.getIdToken());localStorage.setItem(USER_KEY,JSON.stringify(userObj(u)));}catch{}cb(userObj(u));}else{localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(USER_KEY);cb(null);}});}
-export async function sendEmailVerification(user){return firebaseSendEmailVerification(firebaseAuth.currentUser||user);}
-export async function sendPasswordResetEmail(_auth,email){return firebaseSendPasswordResetEmail(firebaseAuth,email);}
-export async function fetchSignInMethodsForEmail(_auth,email){return firebaseFetchSignInMethodsForEmail(firebaseAuth,email);}
-export {GoogleAuthProvider,GithubAuthProvider};
-export async function signInWithPopup(_auth,provider){const out=await firebaseSignInWithPopup(firebaseAuth,provider);const token=await out.user.getIdToken();localStorage.setItem(TOKEN_KEY,token);localStorage.setItem(USER_KEY,JSON.stringify(userObj(out.user)));return {user:userObj(out.user)};}
-export function updateProfile(user,data){return request(`/users/${user.uid}`,{method:'PATCH',body:JSON.stringify(data)});}
+export async function setDoc(ref,data,options={}){const body=JSON.stringify(resolve(data));if(options.merge)return updateDoc(ref,data);try{await getDoc(ref);return updateDoc(ref,data);}catch(e){if(e.status!==404)throw e;return api(`/${ref.collection}`,{method:'POST',body:JSON.stringify({...resolve(data),_id:ref.id})});}}
+export async function addDoc(ref,data){const d=await api(`/${ref.name}`,{method:'POST',body:JSON.stringify(resolve(data))});return{id:d.id};}
+export async function updateDoc(ref,data){return api(`/${ref.collection}/${encodeURIComponent(ref.id)}`,{method:'PATCH',body:JSON.stringify(resolve(data))});}
+export async function deleteDoc(ref){return api(`/${ref.collection}/${encodeURIComponent(ref.id)}`,{method:'DELETE'});}
+export async function signInWithEmailAndPassword(_a,email,password){const c=await fbLogin(auth,email,password);await persist(c.user);return{user:c.user};}
+export async function createUserWithEmailAndPassword(_a,email,password){const c=await fbSignup(auth,email,password);await persist(c.user);return{user:c.user};}
+export async function signInWithPopup(_a,provider){const c=await fbPopup(auth,provider);await persist(c.user);return{user:c.user};}
+async function persist(u){const t=await u.getIdToken();localStorage.setItem(TOKEN,t);localStorage.setItem(USER,JSON.stringify(cleanUser(u)));}
+export async function signOut(){await fbSignOut(auth);localStorage.removeItem(TOKEN);localStorage.removeItem(USER);}
+export function onAuthStateChanged(_a,cb){return fbOnAuthStateChanged(auth,async u=>{if(u)await persist(u);else{localStorage.removeItem(TOKEN);localStorage.removeItem(USER);}cb(u);});}
+export const sendEmailVerification=user=>fbVerify(auth.currentUser||user);
+export const sendPasswordResetEmail=(_a,email)=>fbReset(auth,email);
+export const fetchSignInMethodsForEmail=async()=>[];
+export const updateProfile=async(user,data)=>api(`/users/${encodeURIComponent(user.uid)}`,{method:'PATCH',body:JSON.stringify(data)});
