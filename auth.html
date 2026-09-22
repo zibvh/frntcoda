@@ -775,7 +775,7 @@ window.handleSignup = async function(role) {
       setLoading(btn, false);
     } catch(e) {
       _signupInProgress = false;
-      showToast(authErrMsgs[e.code] || 'Something went wrong — please try again', 'error');
+      showToast(authErrMsgs[e.code] || e?.message || e?.code || 'Authentication failed. Please try again.', 'error');
       setLoading(btn, false);
     }
 
@@ -815,7 +815,7 @@ window.handleSignup = async function(role) {
       showVerifyBanner('tutor', email, cred.user.uid);
     } catch(e) {
       _signupInProgress = false;
-      showToast(authErrMsgs[e.code] || 'Something went wrong — please try again', 'error');
+      showToast(authErrMsgs[e.code] || e?.message || e?.code || 'Authentication failed. Please try again.', 'error');
     }
     setLoading(btn, false);
   }

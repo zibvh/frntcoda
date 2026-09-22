@@ -38,9 +38,17 @@ async function request(path, options={}){
     } catch {}
   }
   if(token) headers.Authorization=`Bearer ${token}`;
-  const res=await fetch(API_BASE+path,{...options,headers});
+  let res;
+  try {
+    res=await fetch(API_BASE+path,{...options,headers});
+  } catch(fetchErr) {
+    const e=new Error('Could not reach the frNtcOda server. Check the Render deployment and try again.');
+    e.code='api/network-error';
+    e.cause=fetchErr;
+    throw e;
+  }
   let data={}; try{data=await res.json();}catch{}
-  if(!res.ok){const e=new Error(data.error||`Request failed (${res.status})`);e.status=res.status;e.code=data.code||'api/error';throw e;}
+  if(!res.ok){const e=new Error(data.error||`Server returned HTTP ${res.status}`);e.status=res.status;e.code=data.code||`api/http-${res.status}`;throw e;}
   return data;
 }
 
