@@ -2,7 +2,7 @@
   "name": "frntcoda",
   "version": "2.0.0",
   "private": true,
-  "description": "frNtcOda LMS with Firebase Authentication and MongoDB application data",
+  "description": "frNtcOda LMS migrated from Firebase to MongoDB, Node.js and Express.js",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

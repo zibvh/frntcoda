@@ -100,18 +100,6 @@ function canWrite(col,req,data,existing){
   return false;
 }
 
-app.post('/api/auth/profile',auth,async(req,res)=>{
-  try{
-    const role=req.body.role==='tutor'?'tutor':'student';
-    const existing=await User.findById(req.auth.uid);
-    if(existing) return res.json({user:clean(existing)});
-    const name=(req.body.fullName||'').trim();
-    const doc={_id:req.auth.uid,uid:req.auth.uid,email:String(req.auth.email||req.body.email||'').toLowerCase(),firstName:req.body.firstName||'',lastName:req.body.lastName||'',fullName:name||`${req.body.firstName||''} ${req.body.lastName||''}`.trim(),phone:req.body.phone||'',role,status:role==='tutor'?'pending':'active',emailVerified:req.firebaseUser?.email_verified===true||req.body.emailVerified===true,provider:req.body.provider||'password',createdAt:new Date()};
-    if(role==='tutor'){doc.specialisation=req.body.specialisation||'';doc.experience=req.body.experience||'';doc.registrationFeeRef=null;}
-    await User.create(doc);
-    res.status(201).json({user:clean(doc)});
-  }catch(e){console.error('Firebase profile creation failed:',e);res.status(500).json({error:e.message});}
-});
 app.post('/api/auth/signup',async(req,res)=>{
   try{
     const {email,password,...profile}=req.body; if(!email||!password||password.length<6) return res.status(400).json({error:'Valid email and password (6+ characters) are required'});
@@ -134,6 +122,32 @@ app.post('/api/auth/login',async(req,res)=>{
   }catch(e){res.status(500).json({error:e.message});}
 });
 app.get('/api/auth/me',auth,async(req,res)=>{const u=await User.findById(req.auth.uid); if(!u)return res.status(404).json({error:'User not found'}); res.json({user:clean(u)});});
+app.post('/api/auth/profile',auth,async(req,res)=>{
+  try{
+    const uid=String(req.auth.uid);
+    const role=req.body.role==='tutor'?'tutor':'student';
+    const collection=req.body.pending ? 'pending_users' : 'users';
+    const M=model(collection);
+    const existing=await M.findById(uid);
+    if(existing) return res.json(clean(existing));
+    const email=String(req.auth.email||req.body.email||'').trim().toLowerCase();
+    if(!email) return res.status(400).json({error:'Authenticated account has no email address.'});
+    const data={...req.body,uid,email,role};
+    delete data.pending;
+    delete data.password;
+    // Never allow the client to elevate its own account. Tutor accounts remain pending.
+    if(role==='tutor' || collection==='pending_users'){
+      data.status='pending';
+      data.emailVerified=!!req.firebaseUser?.email_verified;
+      if(role==='tutor') data.registrationFeePaid=false;
+    }else{
+      data.status='active';
+      data.emailVerified=!!req.firebaseUser?.email_verified;
+    }
+    const d=await M.create(data);
+    res.status(201).json(clean(d));
+  }catch(e){res.status(500).json({error:e.message});}
+});
 app.post('/api/auth/logout',(req,res)=>res.json({ok:true}));
 app.post('/api/auth/check-email',async(req,res)=>res.json({exists:!!(await User.findOne({email:(req.body.email||'').trim().toLowerCase()}))}));
 app.post('/api/auth/forgot-password',async(req,res)=>res.json({ok:true,message:'If the account exists, password reset instructions will be sent.'}));
