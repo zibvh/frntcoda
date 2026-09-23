@@ -41,16 +41,22 @@ const ownerFields={enrollments:'studentId',certificates:'studentId',submissions:
 const sensitiveUser=['role','status','isVerified','emailVerified','registrationFeePaid','registrationFeeRef','paystackSubaccountCode','approvedAt','statusUpdatedAt'];
 
 function clean(doc){ if(!doc) return doc; const o=doc.toObject?doc.toObject():{...doc}; o.id=String(o._id); delete o._id; delete o.__v; if(o.password) delete o.password; return o; }
+async function findUserForFirebase(decoded){
+  if(!decoded) return null;
+  let user = await User.findById(decoded.uid).catch(()=>null);
+  if(!user) user = await User.findOne({uid:String(decoded.uid)});
+  if(!user && decoded.email) user = await User.findOne({email:String(decoded.email).trim().toLowerCase()});
+  return user;
+}
 async function auth(req,res,next){
  const h=req.headers.authorization||'';
  if(!h.startsWith('Bearer ')) return res.status(401).json({error:'Authentication required'});
  if(!firebaseAdminReady) return res.status(503).json({error:'Firebase Admin is not configured on the server'});
  try{
   const decoded=await adminSdk.auth().verifyIdToken(h.slice(7));
-  let user=await User.findById(decoded.uid);
-  if(!user&&decoded.email) user=await User.findOne({email:String(decoded.email).toLowerCase()});
+  const user=await findUserForFirebase(decoded);
   // Safety net: if this login's email matches the configured admin email exactly,
-  // always treat as admin even if the Mongo user record's role field is stale/missing.
+  // always treat as admin even if the Mongo user record is stale/missing.
   const isConfiguredAdmin = !!(process.env.ADMIN_EMAIL && decoded.email &&
     String(decoded.email).trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase());
   req.auth={uid:decoded.uid,email:decoded.email,role: isConfiguredAdmin ? 'admin' : (user?.role||'student')};
@@ -66,8 +72,7 @@ async function optionalAuth(req){
   if(!firebaseAdminReady) return null;
   try{
     const decoded=await adminSdk.auth().verifyIdToken(h.slice(7));
-    let user=await User.findById(decoded.uid);
-    if(!user&&decoded.email) user=await User.findOne({email:String(decoded.email).toLowerCase()});
+    const user=await findUserForFirebase(decoded);
     const isConfiguredAdmin = !!(process.env.ADMIN_EMAIL && decoded.email &&
       String(decoded.email).trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase());
     return {uid:decoded.uid,email:decoded.email,role: isConfiguredAdmin ? 'admin' : (user?.role||'student')};
@@ -103,8 +108,8 @@ function canReadCollection(col,req,doc){
   const owner=ownerFields[col];
   if(owner && String(doc[owner])===req.auth.uid) return true;
   if(col==='courses') return doc.status==='live' || String(doc.tutorId)===req.auth.uid;
-  if(col==='enrollments') return String(doc.studentId)===req.auth.uid || (req.auth.role==='tutor' && String(doc.tutorId)===req.auth.uid) || (req.auth.role==='tutor');
-  if(['submissions','examSubmissions'].includes(col)) return String(doc.studentId)===req.auth.uid || (req.auth.role==='tutor' && String(doc.tutorId)===req.auth.uid) || (req.auth.role==='tutor');
+  if(col==='enrollments') return String(doc.studentId)===req.auth.uid || String(doc.uid)===req.auth.uid || String(doc.userId)===req.auth.uid || (req.auth.role==='tutor' && String(doc.tutorId)===req.auth.uid);
+  if(['submissions','examSubmissions'].includes(col)) return String(doc.studentId)===req.auth.uid || (req.auth.role==='tutor' && String(doc.tutorId)===req.auth.uid);
   if(col==='payments') return String(doc.studentId)===req.auth.uid || String(doc.tutorId)===req.auth.uid;
   return false;
 }
@@ -118,7 +123,7 @@ function canWrite(col,req,data,existing){
   return false;
 }
 
-app.get('/api/auth/me',auth,async(req,res)=>{const u=await User.findById(req.auth.uid); if(!u)return res.status(404).json({error:'User not found'}); res.json({user:clean(u)});});
+app.get('/api/auth/me',auth,async(req,res)=>{const u=await User.findById(req.auth.uid).catch(()=>null) || await User.findOne({uid:req.auth.uid}) || (req.auth.email ? await User.findOne({email:String(req.auth.email).trim().toLowerCase()}) : null); if(!u)return res.status(404).json({error:'User not found'}); res.json({user:clean(u),auth:{uid:req.auth.uid,email:req.auth.email,role:req.auth.role}});});
 app.post('/api/auth/profile',auth,async(req,res)=>{
   try{
     const uid=String(req.auth.uid);
@@ -184,6 +189,10 @@ app.get('/api/:collection',async(req,res)=>{
     const a=await optionalAuth(req);
     if(!a && col!=='courses') return res.status(401).json({error:'Authentication required'});
     const filter=sanitizeQuery(req.query); if(!a && col==='courses') filter.status='live';
+    if(a && a.role!=='admin' && col==='enrollments' && req.query.studentId===a.uid){
+      delete filter.studentId;
+      filter.$or=[{studentId:a.uid},{uid:a.uid},{userId:a.uid}];
+    }
     if(a && a.role==='tutor' && ['enrollments','submissions','examSubmissions'].includes(col)){
       const owned=await model('courses').find({tutorId:a.uid},{_id:1}).lean();
       filter.courseId={$in:owned.map(x=>x._id.toString())};

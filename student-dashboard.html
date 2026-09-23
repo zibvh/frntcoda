@@ -1012,6 +1012,7 @@ const auth = getAuth();
 const db = getMongoDB();
 let currentUser = null, currentProfile = null;
 let enrollments = [], allCourses = [], certs = [];
+const isVisibleEnrollment = e => !['removed','cancelled','payment_failed','pending'].includes(String(e.status||'active').toLowerCase());
 let hiddenCourses = new Set(); // courseIds hidden locally by student (stored in MongoDB user doc)
 let activeCourseId = null, activeLessons = [], activeLessonIdx = 0;
 let testAnswers = {}, testData = null;
@@ -1154,7 +1155,7 @@ async function loadHomeData() {
   enrollments = enSnap.docs.map(d => ({id:d.id,...d.data()}));
   certs = cSnap.docs.map(d => ({id:d.id,...d.data()}));
 
-  const activeEnrollments = enrollments.filter(e => e.status === 'active' && e.status !== 'removed' && !hiddenCourses.has(e.courseId));
+  const activeEnrollments = enrollments.filter(e => isVisibleEnrollment(e) && !hiddenCourses.has(e.courseId));
   const completedEnrollments = enrollments.filter(e => e.progress >= 100);
 
   // Stats
@@ -1250,7 +1251,7 @@ async function loadMyCourses() {
       enrollments = enSnap.docs.map(d => ({id:d.id,...d.data()}));
     } catch(e) { /* silently continue */ }
   }
-  const activeEnrollments = enrollments.filter(e => e.status === 'active' && e.status !== 'removed' && !hiddenCourses.has(e.courseId));
+  const activeEnrollments = enrollments.filter(e => isVisibleEnrollment(e) && !hiddenCourses.has(e.courseId));
   if (activeEnrollments.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="emoji"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h8"/></svg></div><p>No enrolled courses yet</p><button class="btn btn-blue" onclick="showPanel('browse')">Browse Courses</button></div>`;
     return;

@@ -211,10 +211,9 @@ function setLoading(loading){
 </script>
 
 <script type="module">
-import { getAuth, signOut, signInWithEmailAndPassword, getFirestore, doc, getDoc } from './js/api.js';
+import { getAuth, signOut, signInWithEmailAndPassword } from './js/api.js';
 
 const auth = getAuth();
-const db = getFirestore();
 window.handleLogin = async function() {
   const email = document.getElementById('a-email').value.trim();
   const pw    = document.getElementById('a-pw').value;
@@ -222,9 +221,11 @@ window.handleLogin = async function() {
   setLoading(true);
   try {
     const cred = await signInWithEmailAndPassword(auth, email, pw);
-    const snap = await getDoc(doc(db, 'users', cred.user.uid));
-    if (!snap.exists() || snap.data().role !== 'admin') {
-      showToast('Access denied.', 'error');
+    const token = await auth.currentUser.getIdToken();
+    const meRes = await fetch('/api/auth/me', { headers: { Authorization: 'Bearer ' + token } });
+    const me = await meRes.json().catch(() => ({}));
+    if (!meRes.ok || me.auth?.role !== 'admin') {
+      showToast(me.error || 'Access denied.', 'error');
       await signOut(auth);
       setLoading(false);
       return;
