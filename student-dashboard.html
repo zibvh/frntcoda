@@ -986,7 +986,7 @@ svg.lucide-icon,[class*="ds-icon"] svg,[class*="stat-icon"] svg,[class*="bnav-ic
   })();
 </script>
 <script type="module">
-import { getAuth, onAuthStateChanged, signOut, getMongoDB, collection, doc, setDoc, getDoc, serverTimestamp, query, where, getDocs, addDoc, updateDoc } from './js/api.js';
+import { getAuth, onAuthStateChanged, signOut, getMongoDB, collection, doc, setDoc, getDoc, serverTimestamp, query, where, getDocs, addDoc, updateDoc, deleteDoc } from './js/api.js';
 
 // ── ERROR BOUNDARY ──────────────────────────────────────────────
 window.addEventListener('error', function(e) {
@@ -1671,41 +1671,69 @@ window.markLessonDone = async function(idx, enrollmentId, courseId, btn) {
   try {
     const enRef = doc(db,'enrollments',enrollmentId);
     const enSnap = await getDoc(enRef);
-    const data = enSnap.data();
-    const completed = new Set(data.completedLessons || []);
+    if (!enSnap.exists()) throw new Error('Enrollment not found');
+
+    const data = enSnap.data() || {};
+    // Normalize old records that may contain numeric lesson indexes.
+    // This guarantees lesson 0 and "0" are treated as the same completed lesson.
+    const completed = new Set((Array.isArray(data.completedLessons) ? data.completedLessons : [])
+      .map(v => String(v)));
     completed.add(String(idx));
+
     const total = activeLessons.length;
-    const pct = total > 0 ? Math.round((completed.size/total)*100) : 0;
-    await updateDoc(enRef, { completedLessons: [...completed], progress: pct });
-    showToast('Lesson completed! <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>','success');
-    // Update in-memory enrollments so course card reflects new progress
-    const memIdx = enrollments.findIndex(e => e.id === enrollmentId);
+    const completedLessons = Array.from(completed);
+    const pct = total > 0 ? Math.min(100, Math.round((completedLessons.length / total) * 100)) : 0;
+
+    // Persist first. The API returns the actual Mongo document, so the UI uses
+    // the server-confirmed value instead of assuming the write succeeded.
+    const saved = await updateDoc(enRef, { completedLessons, progress: pct });
+    const savedCompleted = new Set(
+      (Array.isArray(saved?.completedLessons) ? saved.completedLessons : completedLessons).map(v => String(v))
+    );
+    const savedPct = Number.isFinite(Number(saved?.progress)) ? Number(saved.progress) : pct;
+
+    // Update the local cache immediately with the server-confirmed state.
+    const memIdx = enrollments.findIndex(e => String(e.id) === String(enrollmentId));
     if (memIdx >= 0) {
-      enrollments[memIdx] = { ...enrollments[memIdx], completedLessons: [...completed], progress: pct };
+      enrollments[memIdx] = {
+        ...enrollments[memIdx],
+        completedLessons: Array.from(savedCompleted),
+        progress: savedPct
+      };
     }
-    // Update streak (only once per calendar day; resets if >1 day gap)
-    await updateStreakToday();
-    // Re-render lesson viewer
+
+    showToast('Lesson completed! <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>','success');
+
+    // Streak tracking is non-critical; it must never prevent saved progress
+    // from being reflected in the lesson UI.
+    try { await updateStreakToday(); } catch (_) {}
+
     const cSnap = await getDoc(doc(db,'courses',courseId));
-    renderLessonList(completed, enrollmentId, courseId);
-    renderLessonContent(idx, enrollmentId, completed, cSnap.data());
-    // Update progress bar in header
-    document.getElementById('lv-progress-txt').textContent = `${completed.size} / ${total}`;
-    document.getElementById('lv-progress-fill').style.width = `${pct}%`;
-    // If course just completed, show a completion banner
-    if (pct >= 100) {
-      showCompletionBanner(courseId, cSnap.data()?.title || 'this course');
+    const course = cSnap.exists() ? cSnap.data() : {};
+    renderLessonList(savedCompleted, enrollmentId, courseId);
+    renderLessonContent(idx, enrollmentId, savedCompleted, course);
+    document.getElementById('lv-progress-txt').textContent = `${savedCompleted.size} / ${total}`;
+    document.getElementById('lv-progress-fill').style.width = `${savedPct}%`;
+
+    if (savedPct >= 100) {
+      // Wait for certificate creation instead of fire-and-forget. Then open
+      // the certificate panel so the student can actually see/claim it.
+      await autoIssueCert(courseId);
+      showCompletionBanner(courseId, course.title || 'this course');
+      setTimeout(() => {
+        showPanel('certificates');
+      }, 500);
     }
   } catch(e) {
     console.error('markLessonDone error:', e);
-    (()=>{ console.error('[frNtcOda]', e.message||e); showToast('Could not save progress — check your connection', 'error'); })();
+    showToast('Could not save progress — check your connection','error');
+  } finally {
+    setBtnLoading(btn, false);
   }
-  finally { setBtnLoading(btn, false); }
 };
 
 function showCompletionBanner(courseId, courseName) {
   document.getElementById('completion-banner')?.remove();
-  autoIssueCert(courseId);
   const banner = document.createElement('div');
   banner.id = 'completion-banner';
   banner.style.cssText = 'background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(43,107,255,.08));border:1px solid rgba(34,197,94,.3);border-radius:14px;padding:1.25rem;margin-bottom:1rem;text-align:center;animation:fadeIn .3s ease;';
@@ -2749,38 +2777,39 @@ window.confirmDeleteCourse = async function() {
   btn.disabled = true;
   btn.textContent = 'Removing…';
 
-  const enrollment = enrollments.find(en => en.courseId === courseId);
+  const enrollment = enrollments.find(en => String(en.courseId) === String(courseId) && isVisibleEnrollment(en));
+  if (!enrollment || !enrollment.id) {
+    btn.disabled = false;
+    btn.textContent = 'Remove';
+    showToast('Could not find this enrollment. Refresh and try again.','error');
+    return;
+  }
 
   try {
-    if (enrollment && enrollment.id) {
-      // Try hard delete first
-      try {
-        await deleteDoc(doc(db, 'enrollments', enrollment.id));
-      } catch(delErr) {
-        // Hard delete blocked by rules — soft delete instead (set status to 'removed')
-        // This still works because the update rule only checks isAuth()
-        await updateDoc(doc(db, 'enrollments', enrollment.id), {
-          status: 'removed',
-          removedAt: serverTimestamp(),
-        });
-      }
-    }
-    // Remove from in-memory array (both hard and soft delete)
-    enrollments = enrollments.filter(en => en.courseId !== courseId);
-    // Update stats
-    const active = enrollments.filter(en => en.status === 'active');
-    const completed = enrollments.filter(en => (en.progress || 0) >= 100);
+    // This is now a real Mongo DELETE through the API wrapper. The previous
+    // build referenced deleteDoc without importing it, so the button could get
+    // stuck in its loading state while falling through to a broken fallback.
+    await deleteDoc(doc(db, 'enrollments', enrollment.id));
+
+    // Remove locally only after the server confirms deletion.
+    enrollments = enrollments.filter(en => String(en.id) !== String(enrollment.id));
+    hiddenCourses.delete(courseId);
+
+    const active = enrollments.filter(en => isVisibleEnrollment(en));
+    const completed = active.filter(en => Number(en.progress || 0) >= 100);
     const statEl = document.getElementById('stat-enrolled');
     const statCEl = document.getElementById('stat-completed');
     if (statEl) statEl.textContent = active.length;
     if (statCEl) statCEl.textContent = completed.length;
+
     window.closeDCModal();
     await loadMyCourses();
-    showToast('Course removed.', 'success');
+    showToast('Course removed.','success');
   } catch(e) {
+    console.error('[frNtcOda] remove course failed:', e);
     btn.disabled = false;
     btn.textContent = 'Remove';
-    showToast('Failed to remove — try again.', 'error');
+    showToast('Failed to remove: ' + (e.message || 'check your connection'),'error');
   }
 };
 
