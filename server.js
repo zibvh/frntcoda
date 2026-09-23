@@ -78,7 +78,16 @@ async function optionalAuth(req){
     return {uid:decoded.uid,email:decoded.email,role: isConfiguredAdmin ? 'admin' : (user?.role||'student')};
   }catch(e){ return null; }
 }
-function toMongoId(id){ return id; }
+function toMongoId(id){
+  // Most Firebase UIDs are arbitrary strings, while Mongo-created records
+  // (courses, enrollments, etc.) use ObjectId values. The API receives IDs
+  // from the browser as strings, so convert valid ObjectId strings back to
+  // ObjectId before findById/update/delete operations.
+  const value=String(id ?? '');
+  return mongoose.Types.ObjectId.isValid(value) && value.length===24
+    ? new mongoose.Types.ObjectId(value)
+    : id;
+}
 function sanitizeQuery(q){
   const out={};
   for(const [k,v] of Object.entries(q||{})){
