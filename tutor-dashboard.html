@@ -332,6 +332,21 @@ td{padding:.75rem 1.1rem;font-size:.875rem;vertical-align:middle;}
 .outline-move:hover,.outline-edit:hover{color:var(--white);border-color:rgba(255,255,255,.25);}
 .outline-move:disabled{opacity:.25;cursor:not-allowed;}
 .outline-move:disabled:hover{color:var(--gray);border-color:var(--border);}
+/* ── Rich text toolbar (for lesson body / course description) ── */
+.rt-toolbar{display:flex;flex-wrap:wrap;gap:.35rem;padding:.4rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;}
+.rt-toolbar + textarea{border-radius:0 0 8px 8px !important;border-top:none !important;}
+.rt-btn{display:flex;align-items:center;justify-content:center;min-width:30px;height:28px;padding:0 .4rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;color:var(--gray);font-family:var(--body);font-size:.72rem;font-weight:700;cursor:pointer;transition:all .12s;}
+.rt-btn:hover{background:rgba(255,255,255,.09);color:var(--white);border-color:rgba(255,255,255,.2);}
+.rt-btn:active{transform:scale(.94);}
+.rt-btn.rt-italic{font-style:italic;font-weight:600;}
+.rt-sep{width:1px;background:var(--border);margin:2px 1px;}
+.rt-select{height:28px;padding:0 .35rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;color:var(--gray);font-family:var(--mono);font-size:.68rem;}
+.rt-swatch{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.15);cursor:pointer;padding:0;transition:transform .12s;}
+.rt-swatch:hover{transform:scale(1.15);}
+.rt-swatch.active{border-color:var(--white);}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;margin-right:.45rem;vertical-align:middle;}
+.btn[disabled]{opacity:.7;cursor:not-allowed;pointer-events:none;}
 </style>
 
 <style>
@@ -507,6 +522,26 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
         </div>
         <div class="form-group">
           <label class="form-label">Description</label>
+          <div class="rt-toolbar" data-target="bc-desc">
+            <button type="button" class="rt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+            <button type="button" class="rt-btn rt-italic" data-fmt="italic" title="Italic">i</button>
+            <div class="rt-sep"></div>
+            <select class="rt-select" data-fmt="size" title="Text size">
+              <option value="">Size</option>
+              <option value="sm">Small</option>
+              <option value="md">Normal</option>
+              <option value="lg">Large</option>
+              <option value="xl">X-Large</option>
+            </select>
+            <div class="rt-sep"></div>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="" style="background:var(--white);" title="Default"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="blue" style="background:var(--blue-glow);" title="Blue"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="red" style="background:var(--red-bright);" title="Red"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="green" style="background:var(--green);" title="Green"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="amber" style="background:var(--amber);" title="Amber"></button>
+            <div class="rt-sep"></div>
+            <button type="button" class="rt-btn" data-fmt="link" title="Link">🔗</button>
+          </div>
           <textarea class="form-textarea" id="bc-desc" placeholder="Describe what students will learn…"></textarea>
         </div>
 
@@ -539,7 +574,27 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
             <input class="form-input" id="l-title" placeholder="e.g. What is HTML?">
           </div>
           <div class="form-group">
-            <label class="form-label">Lesson Notes (supports **bold**, `code`, \`\`\`blocks\`\`\`)</label>
+            <label class="form-label">Lesson Notes</label>
+            <div class="rt-toolbar" data-target="l-notes">
+              <button type="button" class="rt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+              <button type="button" class="rt-btn rt-italic" data-fmt="italic" title="Italic">i</button>
+              <div class="rt-sep"></div>
+              <select class="rt-select" data-fmt="size" title="Text size">
+                <option value="">Size</option>
+                <option value="sm">Small</option>
+                <option value="md">Normal</option>
+                <option value="lg">Large</option>
+                <option value="xl">X-Large</option>
+              </select>
+              <div class="rt-sep"></div>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="" style="background:var(--white);" title="Default"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="blue" style="background:var(--blue-glow);" title="Blue"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="red" style="background:var(--red-bright);" title="Red"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="green" style="background:var(--green);" title="Green"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="amber" style="background:var(--amber);" title="Amber"></button>
+              <div class="rt-sep"></div>
+              <button type="button" class="rt-btn" data-fmt="link" title="Link">🔗</button>
+            </div>
             <textarea class="form-textarea" id="l-notes" rows="5" placeholder="Write your lesson content here…"></textarea>
           </div>
           <div class="form-group">
@@ -757,7 +812,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
           </div>
         </div>
         <div style="padding:1rem;display:flex;flex-direction:column;gap:.5rem;">
-          <button class="btn btn-primary btn-full" onclick="submitCourse()" style="font-size:.85rem;padding:.75rem;">
+          <button class="btn btn-primary btn-full" onclick="submitCourse(this)" style="font-size:.85rem;padding:.75rem;">
             Submit for Review →
           </button>
           <button class="btn btn-ghost btn-full" id="save-draft-btn" onclick="saveDraft()" style="font-size:.8rem;padding:.65rem;">
@@ -861,6 +916,26 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
         </div>
         <div class="form-group">
           <label class="form-label">Description</label>
+          <div class="rt-toolbar" data-target="ec-desc">
+            <button type="button" class="rt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+            <button type="button" class="rt-btn rt-italic" data-fmt="italic" title="Italic">i</button>
+            <div class="rt-sep"></div>
+            <select class="rt-select" data-fmt="size" title="Text size">
+              <option value="">Size</option>
+              <option value="sm">Small</option>
+              <option value="md">Normal</option>
+              <option value="lg">Large</option>
+              <option value="xl">X-Large</option>
+            </select>
+            <div class="rt-sep"></div>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="" style="background:var(--white);" title="Default"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="blue" style="background:var(--blue-glow);" title="Blue"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="red" style="background:var(--red-bright);" title="Red"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="green" style="background:var(--green);" title="Green"></button>
+            <button type="button" class="rt-swatch" data-fmt="color" data-color="amber" style="background:var(--amber);" title="Amber"></button>
+            <div class="rt-sep"></div>
+            <button type="button" class="rt-btn" data-fmt="link" title="Link">🔗</button>
+          </div>
           <textarea class="form-textarea" id="ec-desc" placeholder="Describe what students will learn…"></textarea>
         </div>
 
@@ -906,7 +981,30 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
         <!-- EC Lesson tab -->
         <div class="type-content active" id="ec-type-lesson">
           <div class="form-group"><label class="form-label">Lesson Title *</label><input class="form-input" id="ec-l-title" placeholder="e.g. What is HTML?"></div>
-          <div class="form-group"><label class="form-label">Lesson Notes</label><textarea class="form-textarea" id="ec-l-notes" rows="4" placeholder="Write your lesson content…"></textarea></div>
+          <div class="form-group">
+            <label class="form-label">Lesson Notes</label>
+            <div class="rt-toolbar" data-target="ec-l-notes">
+              <button type="button" class="rt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+              <button type="button" class="rt-btn rt-italic" data-fmt="italic" title="Italic">i</button>
+              <div class="rt-sep"></div>
+              <select class="rt-select" data-fmt="size" title="Text size">
+                <option value="">Size</option>
+                <option value="sm">Small</option>
+                <option value="md">Normal</option>
+                <option value="lg">Large</option>
+                <option value="xl">X-Large</option>
+              </select>
+              <div class="rt-sep"></div>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="" style="background:var(--white);" title="Default"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="blue" style="background:var(--blue-glow);" title="Blue"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="red" style="background:var(--red-bright);" title="Red"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="green" style="background:var(--green);" title="Green"></button>
+              <button type="button" class="rt-swatch" data-fmt="color" data-color="amber" style="background:var(--amber);" title="Amber"></button>
+              <div class="rt-sep"></div>
+              <button type="button" class="rt-btn" data-fmt="link" title="Link">🔗</button>
+            </div>
+            <textarea class="form-textarea" id="ec-l-notes" rows="4" placeholder="Write your lesson content…"></textarea>
+          </div>
           <div class="form-group"><label class="form-label">Video URL (YouTube — optional)</label><input class="form-input" id="ec-l-video" type="url" placeholder="https://youtube.com/watch?v=..."></div>
           <button class="btn btn-primary btn-full" onclick="ecAddItem('Lesson')">Add Lesson to Outline</button>
         </div>
@@ -974,7 +1072,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
           <div class="empty-outline">Loading…</div>
         </div>
         <div style="padding:1rem;display:flex;flex-direction:column;gap:.5rem;">
-          <button class="btn btn-primary btn-full" onclick="saveFullEdit()" style="font-size:.85rem;padding:.75rem;">
+          <button class="btn btn-primary btn-full" onclick="saveFullEdit(this)" style="font-size:.85rem;padding:.75rem;">
             Save &amp; Submit for Review →
           </button>
           <button class="btn btn-ghost btn-full" onclick="showPanel('courses')" style="font-size:.8rem;">
@@ -1136,7 +1234,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
     </div>
     <div style="display:flex;gap:.5rem;margin-top:1rem;">
       <button class="btn btn-ghost btn-full" onclick="closeModal('grade-modal')">Cancel</button>
-      <button class="btn btn-primary btn-full" onclick="submitGrade()">Submit Grade</button>
+      <button class="btn btn-primary btn-full" onclick="submitGrade(this)">Submit Grade</button>
     </div>
   </div>
 </div>
@@ -1172,7 +1270,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
     <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="edit-desc"></textarea></div>
     <div style="display:flex;gap:.5rem;margin-top:1rem;">
       <button class="btn btn-ghost btn-full" onclick="closeModal('edit-modal')">Cancel</button>
-      <button class="btn btn-primary btn-full" onclick="saveEdit()">Save & Submit for Review</button>
+      <button class="btn btn-primary btn-full" onclick="saveEdit(this)">Save & Submit for Review</button>
     </div>
   </div>
 </div>
@@ -1198,7 +1296,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
     <div class="modal-sub" id="confirm-delete-msg">This cannot be undone.</div>
     <div style="display:flex;gap:.5rem;margin-top:1rem;">
       <button class="btn btn-ghost btn-full" onclick="closeModal('confirm-delete-modal')">Cancel</button>
-      <button class="btn btn-danger btn-full" onclick="confirmDeleteCourse()">Delete</button>
+      <button class="btn btn-danger btn-full" onclick="confirmDeleteCourse(this)">Delete</button>
     </div>
   </div>
 </div>
@@ -1251,7 +1349,7 @@ svg.lucide-icon, [class*="ds-icon"] svg, [class*="stat-icon"] svg, [class*="bnav
 
     <div style="display:flex;gap:.5rem;margin-top:1rem;">
       <button class="btn btn-ghost btn-full" onclick="closeModal('payment-setup-modal')">Cancel</button>
-      <button class="btn btn-primary btn-full" onclick="savePaymentSetup()">Save Payout Info</button>
+      <button class="btn btn-primary btn-full" onclick="savePaymentSetup(this)">Save Payout Info</button>
     </div>
   </div>
 </div>
@@ -1356,6 +1454,77 @@ import { getAuth, onAuthStateChanged, signOut, getMongoDB, collection, doc, getD
 window.addEventListener('error', function(e) {
   console.error('Dashboard error:', e.message, e.filename, e.lineno);
 });
+
+// ── BUTTON LOADING STATE ──────────────────────────────────────────
+// Puts a spinner + label on a button while an async action runs, and
+// restores its original label + enabled state afterward (success or error).
+function setBtnLoading(btn, loading, loadingText) {
+  if (!btn) return;
+  if (loading) {
+    if (btn.dataset.origHtml === undefined) btn.dataset.origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span>' + (loadingText || 'Working…');
+  } else {
+    btn.disabled = false;
+    if (btn.dataset.origHtml !== undefined) { btn.innerHTML = btn.dataset.origHtml; delete btn.dataset.origHtml; }
+  }
+}
+window.setBtnLoading = setBtnLoading;
+
+// ── RICH TEXT TOOLBAR (lesson notes / course description) ──────────
+// Wraps the current textarea selection in lightweight markup:
+//   **bold**, *italic*, [text](url), {size:lg}text{/size}, {color:red}text{/color}
+// Rendered later by markdownToHTML() on the student side.
+function rtWrapSelection(textarea, before, after, placeholder) {
+  const start = textarea.selectionStart, end = textarea.selectionEnd;
+  const value = textarea.value;
+  const selected = value.slice(start, end) || placeholder || '';
+  const newValue = value.slice(0, start) + before + selected + after + value.slice(end);
+  textarea.value = newValue;
+  const cursorStart = start + before.length;
+  const cursorEnd = cursorStart + selected.length;
+  textarea.focus();
+  textarea.setSelectionRange(cursorStart, cursorEnd);
+}
+function initRichTextToolbars() {
+  document.querySelectorAll('.rt-toolbar').forEach(bar => {
+    if (bar.dataset.wired) return; // avoid double-binding on re-render
+    bar.dataset.wired = '1';
+    const targetId = bar.dataset.target;
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-fmt]');
+      if (!btn) return;
+      const textarea = document.getElementById(targetId);
+      if (!textarea) return;
+      const fmt = btn.dataset.fmt;
+      if (fmt === 'bold') rtWrapSelection(textarea, '**', '**', 'bold text');
+      else if (fmt === 'italic') rtWrapSelection(textarea, '*', '*', 'italic text');
+      else if (fmt === 'color') {
+        const color = btn.dataset.color;
+        bar.querySelectorAll('.rt-swatch').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        if (color) rtWrapSelection(textarea, `{color:${color}}`, '{/color}', 'colored text');
+      }
+      else if (fmt === 'link') {
+        const url = prompt('Link URL (include https://):', 'https://');
+        if (!url || !url.trim()) return;
+        rtWrapSelection(textarea, '[', `](${url.trim()})`, 'link text');
+      }
+    });
+    const sizeSelect = bar.querySelector('[data-fmt="size"]');
+    if (sizeSelect) {
+      sizeSelect.addEventListener('change', () => {
+        const size = sizeSelect.value;
+        const textarea = document.getElementById(targetId);
+        if (!textarea || !size) { sizeSelect.value=''; return; }
+        rtWrapSelection(textarea, `{size:${size}}`, '{/size}', 'text');
+        sizeSelect.value = '';
+      });
+    }
+  });
+}
+window.initRichTextToolbars = initRichTextToolbars;
+initRichTextToolbars();
 
 try {
 const auth = getAuth();
@@ -2244,7 +2413,7 @@ window.setPricing = function(type) {
   }
 };
 
-window.submitCourse = async function() {
+window.submitCourse = async function(btn) {
   const title = document.getElementById('bc-title')?.value?.trim();
   const { lang } = getLangAndIcon('bc-lang','bc-lang-custom');
   const hidden  = document.getElementById('bc-fee-hidden');
@@ -2255,6 +2424,7 @@ window.submitCourse = async function() {
   if (!title) { showToast('Add a course title','error'); return; }
   if (isPaid && (!fee || Number(fee) < 100)) { showToast('Set a valid course price (min ₦100)','error'); return; }
   if (builderItems.length===0) { showToast('Add at least one lesson','error'); return; }
+  setBtnLoading(btn, true, 'Submitting…');
   try {
     const fn = tutorProfile.fullName||(tutorProfile.firstName+' '+(tutorProfile.lastName||'')).trim()||'Tutor';
     await addDoc(collection(db,'courses'), {
@@ -2271,6 +2441,7 @@ window.submitCourse = async function() {
     await loadMyCourses();
     showPanel('courses');
   } catch(e) { showToast('Something went wrong — check your connection and try again','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
 // ── SAVE AS DRAFT ──────────────────────────────────────────────────
@@ -2484,7 +2655,7 @@ function renderEcOutline() {
     </div>`).join('');
 }
 
-window.saveFullEdit = async function() {
+window.saveFullEdit = async function(btn) {
   const courseId = document.getElementById('ec-course-id').value;
   const title = document.getElementById('ec-title')?.value?.trim();
   if (!title) { showToast('Add a course title','error'); return; }
@@ -2495,6 +2666,7 @@ window.saveFullEdit = async function() {
   const fee = isPaid ? (document.getElementById('ec-fee')?.value||'0') : '0';
   if (isPaid && (!fee || Number(fee)<100)) { showToast('Set a valid price (min ₦100)','error'); return; }
   const c = myCourses.find(x=>x.id===courseId);
+  setBtnLoading(btn, true, 'Saving…');
   try {
     await updateDoc(doc(db,'courses',courseId), {
       title, language:lang,
@@ -2510,11 +2682,12 @@ window.saveFullEdit = async function() {
     myCourses=[];
     showPanel('courses');
   } catch(e) { showToast('Something went wrong — check your connection and try again','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
-window.saveEdit = async function() {
+window.saveEdit = async function(btn) {
   // Legacy stub — redirects to new saveFullEdit for the simple edit modal (if ever called)
-  saveFullEdit();
+  saveFullEdit(btn);
 };
 
 
@@ -2529,9 +2702,10 @@ window.deleteCourse = async function(courseId, btn) {
   openModal('confirm-delete-modal');
 };
 
-window.confirmDeleteCourse = async function() {
+window.confirmDeleteCourse = async function(btn) {
   const { courseId } = window._pendingDelete || {};
   if (!courseId) return;
+  setBtnLoading(btn, true, 'Deleting…');
   closeModal('confirm-delete-modal');
   window._pendingDelete = null;
   try {
@@ -2551,6 +2725,7 @@ window.confirmDeleteCourse = async function() {
   } catch(e) {
     showToast('Could not delete — check your connection','error');
   }
+  finally { setBtnLoading(btn, false); }
 };
 
 // ── EXAM DETAIL VIEWER ─────────────────────────────────────────────
@@ -2625,11 +2800,12 @@ window.openExamGrade = function(subId, studentName, subData) {
 
 // Patch submitGrade to handle both assignment and exam submissions
 const _origSubmitGrade = window.submitGrade;
-window.submitGrade = async function() {
+window.submitGrade = async function(btn) {
   const score    = document.getElementById('grade-score').value;
   const feedback = document.getElementById('grade-feedback').value;
   if (!score) { showToast('Enter a score','error'); return; }
-
+  setBtnLoading(btn, true, 'Submitting…');
+  try {
   if (gradingExamSubId) {
     const examSubSnap3 = await getDoc(doc(db,'examSubmissions',gradingExamSubId));
     const examSubData3 = examSubSnap3.exists() ? examSubSnap3.data() : {};
@@ -2672,6 +2848,8 @@ window.submitGrade = async function() {
     gradingSubId = null;
     loadSubmissions();
   }
+  } catch(e) { showToast('Could not submit grade — check your connection','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
 // ── GRADING ────────────────────────────────────────────────────────
@@ -2728,7 +2906,7 @@ window.openPaymentSetup = function() {
   openModal('payment-setup-modal');
 };
 
-window.savePaymentSetup = async function() {
+window.savePaymentSetup = async function(btn) {
   const code = document.getElementById('ps-subaccount-code')?.value.trim();
   if (!code) {
     showToast('Please paste your subaccount code', 'error'); return;
@@ -2742,6 +2920,7 @@ window.savePaymentSetup = async function() {
     paystackSubaccountCode: code,   // reusing same field for both providers
     paystackBusinessName: biz,
   };
+  setBtnLoading(btn, true, 'Saving…');
   try {
     await updateDoc(doc(db,'users',user.uid), update);
     Object.assign(tutorProfile, update);
@@ -2752,6 +2931,7 @@ window.savePaymentSetup = async function() {
     closeModal('payment-setup-modal');
     showToast(`Payout account saved ✅`, 'success');
   } catch(e) { showToast('Could not save — check your connection and try again', 'error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
 

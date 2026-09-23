@@ -621,6 +621,8 @@ body{font-family:var(--body);background:var(--dark);color:var(--white);display:f
 #auth-loading .logo-l span{color:#FF0A35;}
 #auth-loading .spin{width:28px;height:28px;border:3px solid rgba(255,255,255,.1);border-top-color:#2B6BFF;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
+.btn-spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;margin-right:.45rem;vertical-align:middle;}
+.btn[disabled]{opacity:.7;cursor:not-allowed;pointer-events:none;}
 #auth-loading.hide{opacity:0;pointer-events:none;transition:opacity .3s;}
 
 /* ── OFFLINE BANNER ── */
@@ -828,6 +830,7 @@ svg.lucide-icon,[class*="ds-icon"] svg,[class*="stat-icon"] svg,[class*="bnav-ic
   <section class="panel" id="panel-lessons">
     <button class="btn btn-ghost btn-sm" onclick="showPanel('mycourses')" style="margin-bottom:1rem;">← Back to Courses</button>
     <div class="lesson-view">
+      <div id="lv-banner" style="display:none;height:110px;border-radius:12px;background-size:cover;background-position:center;margin-bottom:1rem;border:1px solid var(--border);"></div>
       <div class="lesson-progress-bar-wrap">
         <div class="lesson-progress-top">
           <div class="lesson-progress-title" id="lv-course-title">Course</div>
@@ -989,6 +992,20 @@ import { getAuth, onAuthStateChanged, signOut, getMongoDB, collection, doc, setD
 window.addEventListener('error', function(e) {
   console.error('Dashboard error:', e.message, e.filename, e.lineno);
 });
+
+// ── BUTTON LOADING STATE ──────────────────────────────────────────
+function setBtnLoading(btn, loading, loadingText) {
+  if (!btn) return;
+  if (loading) {
+    if (btn.dataset.origHtml === undefined) btn.dataset.origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span>' + (loadingText || 'Working…');
+  } else {
+    btn.disabled = false;
+    if (btn.dataset.origHtml !== undefined) { btn.innerHTML = btn.dataset.origHtml; delete btn.dataset.origHtml; }
+  }
+}
+window.setBtnLoading = setBtnLoading;
 
 try {
 const auth = getAuth();
@@ -1205,7 +1222,7 @@ async function renderEnrollmentCards(container, enrollmentList) {
             ${pct>=100
               ? `<div style="display:flex;flex-direction:column;gap:.4rem;">
                   <button class="btn btn-ghost btn-sm btn-full" onclick="showPanel('lessons',{courseId:'${en.courseId}',enrollmentId:'${en.id}'})">Review Course</button>
-                  <button class="btn btn-red btn-sm btn-full" onclick="checkCertificate('${en.courseId}','${c.title.replace(/'/g,"\'")}',${c.certFee||2500})">Get Certificate <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button>
+                  <button class="btn btn-red btn-sm btn-full" onclick="checkCertificate('${en.courseId}','${c.title.replace(/'/g,"\'")}',${c.certFee||2500},this)">Get Certificate <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button>
                 </div>`
               : `<button class="btn btn-red btn-sm" onclick="showPanel('lessons',{courseId:'${en.courseId}',enrollmentId:'${en.id}'})">Continue →</button>`}
           </div>
@@ -1287,7 +1304,7 @@ function browsCardHTML(c) {
       <div class="browse-card-price">${(c.price||0) === 0 ? '<span style="color:var(--green);font-family:var(--mono);font-size:.75rem;font-weight:600;">FREE</span>' : `<span>₦</span>${(c.price||0).toLocaleString()}`}</div>
       ${enrolled
         ? `<button class="btn btn-ghost btn-sm btn-full" onclick="showPanel('mycourses')">Already Enrolled <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg></button>`
-        : `<div style='display:flex;gap:.4rem;'><button class="btn btn-red" style='flex:1;' onclick="enrollCourse('${c.id}','${c.title.replace(/'/g,"\\'")}',${c.price||0})">${(c.price||0)===0 ? 'Enroll Free' : 'Enroll Now'}</button><button class="btn btn-ghost btn-sm" onclick="shareCourseLinkStudent('${c.id}','${c.title.replace(/'/g,"\\'")}')" style='padding:.5rem .75rem;'><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg></button></div>`}
+        : `<div style='display:flex;gap:.4rem;'><button class="btn btn-red" style='flex:1;' onclick="enrollCourse('${c.id}','${c.title.replace(/'/g,"\\'")}',${c.price||0},this)">${(c.price||0)===0 ? 'Enroll Free' : 'Enroll Now'}</button><button class="btn btn-ghost btn-sm" onclick="shareCourseLinkStudent('${c.id}','${c.title.replace(/'/g,"\\'")}')" style='padding:.5rem .75rem;'><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg></button></div>`}
     </div>
   </div>`;
 }
@@ -1332,7 +1349,7 @@ async function loadCerts() {
             <div style="font-size:2rem;margin-bottom:.5rem;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
             <div style="font-family:var(--display);font-size:1rem;font-weight:800;margin-bottom:.25rem;">Certificate Earned!</div>
             <div style="font-family:var(--mono);font-size:.68rem;color:var(--gray);margin-bottom:1rem;line-height:1.65;">Pay the one-time fee to unlock your certificate for <strong style="color:var(--white);">${c.courseName}</strong></div>
-            <button class="btn btn-red" onclick="payCert('${c.courseId}','${c.courseName.replace(/'/g,"\\'")}',${c.certFee})">Pay ₦${(c.certFee||0).toLocaleString()} to Unlock <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button>
+            <button class="btn btn-red" onclick="payCert('${c.courseId}','${c.courseName.replace(/'/g,"\\'")}',${c.certFee},this)">Pay ₦${(c.certFee||0).toLocaleString()} to Unlock <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></button>
           </div>
         </div>
       </div>`;
@@ -1407,7 +1424,7 @@ async function loadCerts() {
         </div>
       </div>
       <div style="display:flex;gap:.5rem;padding:.75rem 0 .25rem;width:320px;">
-        <button class="btn btn-red btn-sm" style="flex:1;justify-content:center;" onclick="downloadCert('${c.certId}')">
+        <button class="btn btn-red btn-sm" style="flex:1;justify-content:center;" onclick="downloadCert('${c.certId}',this)">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Download
         </button>
         <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center;" onclick="shareCert('${c.certId}','${c.courseName.replace(/'/g,"\\'")}','${c.studentName||name}')">
@@ -1418,10 +1435,10 @@ async function loadCerts() {
   }).join('');
 }
 
-window.downloadCert = async function(certId) {
+window.downloadCert = async function(certId, btn) {
   const srcCard = document.getElementById('cert-card-' + certId);
   if (!srcCard) { showToast('Certificate not found — try refreshing','error'); return; }
-  showToast('Preparing certificate…', '');
+  setBtnLoading(btn, true, 'Preparing…');
   try {
     if (!window.html2canvas) {
       await new Promise((res, rej) => {
@@ -1470,6 +1487,7 @@ window.downloadCert = async function(certId) {
     console.error('[frNtcOda] downloadCert error:', e);
     showToast('Download failed — check your connection and try again','error');
   }
+  finally { setBtnLoading(btn, false); }
 };
 
 async function loadNotifications() {
@@ -1538,6 +1556,13 @@ window.openCourse = async function(courseId, enrollmentId) {
     document.getElementById('lv-progress-txt').textContent = '—';
     document.getElementById('lv-progress-fill').style.width = '0%';
     document.getElementById('lv-lesson-list').innerHTML = '';
+    const lvBanner = document.getElementById('lv-banner');
+    if (course.bannerURL) {
+      lvBanner.style.backgroundImage = `url('${course.bannerURL}')`;
+      lvBanner.style.display = 'block';
+    } else {
+      lvBanner.style.display = 'none';
+    }
     document.getElementById('lv-content-area').innerHTML =
       '<div style="text-align:center;padding:2.5rem 1rem;font-family:var(--mono);font-size:.75rem;color:var(--gray);">Loading course…<br><div class="spin" style="margin:.75rem auto 0;width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--blue-glow);border-radius:50%;animation:spin .7s linear infinite;"></div></div>';
 
@@ -1633,14 +1658,15 @@ function renderLessonContent(idx, enrollmentId, completedIds, course) {
         ${idx > 0 ? `<button class="btn btn-ghost btn-sm" onclick="setActiveLesson(${idx-1},'${enrollmentId}','${course.id||activeCourseId}')">← Prev</button>` : ''}
         ${isDone
           ? `<button class="btn btn-ghost btn-sm" style="margin-left:auto;color:var(--green);"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg> Completed</button>`
-          : `<button class="btn btn-red btn-sm" style="margin-left:auto;" onclick="markLessonDone(${idx},'${enrollmentId}','${course.id||activeCourseId}')">Mark Done <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg></button>`}
+          : `<button class="btn btn-red btn-sm" style="margin-left:auto;" onclick="markLessonDone(${idx},'${enrollmentId}','${course.id||activeCourseId}',this)">Mark Done <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:2px"><polyline points="20 6 9 17 4 12"/></svg></button>`}
         ${!isLast ? `<button class="btn btn-blue btn-sm" onclick="setActiveLesson(${idx+1},'${enrollmentId}','${course.id||activeCourseId}')">Next →</button>` : ''}
       </div>
     </div>`;
   }
 }
 
-window.markLessonDone = async function(idx, enrollmentId, courseId) {
+window.markLessonDone = async function(idx, enrollmentId, courseId, btn) {
+  setBtnLoading(btn, true, 'Saving…');
   try {
     const enRef = doc(db,'enrollments',enrollmentId);
     const enSnap = await getDoc(enRef);
@@ -1673,6 +1699,7 @@ window.markLessonDone = async function(idx, enrollmentId, courseId) {
     console.error('markLessonDone error:', e);
     (()=>{ console.error('[frNtcOda]', e.message||e); showToast('Could not save progress — check your connection', 'error'); })();
   }
+  finally { setBtnLoading(btn, false); }
 };
 
 function showCompletionBanner(courseId, courseName) {
@@ -1759,7 +1786,7 @@ function renderAssignmentQuestion() {
         ${current > 0 ? `<button class="btn btn-ghost btn-sm" onclick="assignNav(-1)">← Back</button>` : ''}
         ${current < questions.length-1
           ? `<button class="btn btn-blue btn-sm" onclick="assignNav(1)">Next →</button>`
-          : `<button class="btn btn-red btn-sm" onclick="submitAssignmentMCQ()">Submit →</button>`}
+          : `<button class="btn btn-red btn-sm" onclick="submitAssignmentMCQ(this)">Submit →</button>`}
       </div>
     </div>
   </div>`;
@@ -1774,7 +1801,7 @@ window.assignNav = function(dir) {
   renderAssignmentQuestion();
 };
 
-window.submitAssignmentMCQ = async function() {
+window.submitAssignmentMCQ = async function(btn) {
   const answered = Object.keys(assignAnswers).length;
   if (answered < assignData.questions.length) {
     showToast(`Answer all questions (${answered}/${assignData.questions.length} done)`,'error'); return;
@@ -1784,6 +1811,7 @@ window.submitAssignmentMCQ = async function() {
   const score = Math.round((correct/assignData.questions.length)*100);
   const passed = score >= assignData.passScore;
 
+  setBtnLoading(btn, true, 'Submitting…');
   try {
     await addDoc(collection(db,'submissions'), {
       studentId: currentUser.uid,
@@ -1812,6 +1840,7 @@ window.submitAssignmentMCQ = async function() {
         : ''}
     </div>`;
   } catch(e) { showToast('Error saving result','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
 // ── EXAM ENGINE ──────────────────────────────────────────────────
@@ -1957,7 +1986,7 @@ function renderExamStep() {
           oninput="examAnswers.fileUrl=this.value">
         <div style="display:flex;gap:.5rem;justify-content:flex-end;">
           ${prevPhase ? `<button class="btn btn-ghost btn-sm" onclick="examGoPhase('${prevPhase}')">← Back</button>` : ''}
-          <button class="btn btn-red btn-sm" onclick="submitExam()">Submit Exam →</button>
+          <button class="btn btn-red btn-sm" onclick="submitExam(this)">Submit Exam →</button>
         </div>
       </div>
     </div>`;
@@ -1989,7 +2018,7 @@ window.examGoPhase = function(phase) {
   renderExamStep();
 };
 
-window.submitExam = async function() {
+window.submitExam = async function(btn) {
   const { lesson, enrollmentId, courseId, lessonIdx, passScore, questions } = examData;
   // Validate theory
   if (lesson.includeTheory && !examAnswers.theoryText?.trim()) {
@@ -2019,6 +2048,7 @@ window.submitExam = async function() {
     objPassed = objScore >= passScore;
   }
 
+  setBtnLoading(btn, true, 'Submitting…');
   try {
     await addDoc(collection(db,'examSubmissions'), {
       studentId:    currentUser.uid,
@@ -2078,6 +2108,7 @@ window.submitExam = async function() {
       <button class="btn btn-ghost btn-full" style="margin-top:1.25rem;" onclick="showPanel('mycourses')">Back to Courses</button>
     </div>`;
   } catch(e) { console.error(e); showToast('Could not submit — check your connection and try again','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
 function renderTestUI(lesson, idx, enrollmentId, course, isDone) {
@@ -2140,7 +2171,7 @@ function renderTestQuestion() {
         ${current > 0 ? `<button class="btn btn-ghost btn-sm" onclick="testNav(-1)">← Back</button>` : ''}
         ${current < questions.length-1
           ? `<button class="btn btn-blue btn-sm" onclick="testNav(1)">Next →</button>`
-          : `<button class="btn btn-red btn-sm" onclick="submitTest()">Submit Test →</button>`}
+          : `<button class="btn btn-red btn-sm" onclick="submitTest(this)">Submit Test →</button>`}
       </div>
     </div>
   </div>`;
@@ -2155,7 +2186,7 @@ window.testNav = function(dir) {
   renderTestQuestion();
 };
 
-window.submitTest = async function() {
+window.submitTest = async function(btn) {
   const answered = Object.keys(testAnswers).length;
   if (answered < testData.questions.length) {
     showToast(`Answer all questions (${answered}/${testData.questions.length} done)`,'error'); return;
@@ -2165,6 +2196,7 @@ window.submitTest = async function() {
   const score = Math.round((correct/testData.questions.length)*100);
   const passed = score >= testData.passScore;
 
+  setBtnLoading(btn, true, 'Submitting…');
   try {
     await addDoc(collection(db,'testResults'), {
       studentId: currentUser.uid,
@@ -2179,6 +2211,7 @@ window.submitTest = async function() {
     if (passed) await markLessonDone(testData.lessonIdx, testData.enrollmentId, testData.courseId);
     showTestResult(score, passed, correct, testData.questions.length);
   } catch(e) { showToast('Could not save your result — check your connection','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
 function showTestResult(score, passed, correct, total) {
@@ -2196,10 +2229,12 @@ function showTestResult(score, passed, correct, total) {
 }
 
 // ── ENROLL ────────────────────────────────────────────────────────
-window.enrollCourse = async function(courseId, courseName, price) {
+window.enrollCourse = async function(courseId, courseName, price, btn) {
   if (!currentUser || !currentProfile) { window.location.href='auth.html'; return; }
-  if (price <= 0) { enrollFree(courseId, courseName); return; }
+  if (price <= 0) { await enrollFree(courseId, courseName, btn); return; }
 
+  setBtnLoading(btn, true, 'Loading…');
+  try {
   // Fetch tutor's subaccount info
   const courseSnap = await getDoc(doc(db,'courses',courseId));
   const tutorId = courseSnap.exists() ? courseSnap.data().tutorId : null;
@@ -2212,14 +2247,17 @@ window.enrollCourse = async function(courseId, courseName, price) {
   document.getElementById('pay-modal-title').textContent = `Enroll: ${courseName}`;
   document.getElementById('pay-modal-sub').textContent = `₦${price.toLocaleString()} · One-time payment`;
   document.getElementById('pay-modal-body').innerHTML =
-    `<button class="btn btn-red btn-full" style="margin-bottom:.5rem;" onclick="payEnroll('${courseId}','${courseName.replace(/'/g,"\\'")}',${price})">Pay ₦${price.toLocaleString()} with Paystack</button>
+    `<button class="btn btn-red btn-full" style="margin-bottom:.5rem;" onclick="payEnroll('${courseId}','${courseName.replace(/'/g,"\\'")}',${price},this)">Pay ₦${price.toLocaleString()} with Paystack</button>
      <button class="btn btn-ghost btn-full" onclick="closePayModal()">Cancel</button>`;
 
   window._payContext = { tutorPay };
   document.getElementById('pay-modal').classList.add('open');
+  } catch(e) { showToast('Could not load course — check your connection','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
-async function enrollFree(courseId, courseName) {
+async function enrollFree(courseId, courseName, btn) {
+  setBtnLoading(btn, true, 'Enrolling…');
   try {
     // Check not already enrolled
     const already = enrollments.find(e => e.courseId === courseId && e.status === 'active');
@@ -2230,6 +2268,7 @@ async function enrollFree(courseId, courseName) {
       progress:0, completedLessons:[], enrolledAt:serverTimestamp()
     };
     const ref = await addDoc(collection(db,'enrollments'), newEnrollment);
+    if (!ref || !ref.id) throw new Error('Server did not return an enrollment id — enrollment may not have been saved.');
     showToast(`Enrolled in ${courseName} <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>`,'success');
     // Update in-memory list so UI refreshes instantly
     enrollments = [...enrollments, { id: ref.id, courseId, status:'active', progress:0, completedLessons:[] }];
@@ -2242,27 +2281,31 @@ async function enrollFree(courseId, courseName) {
     loadBrowse(); // refresh browse so button changes to "Already Enrolled"
   } catch(e) {
     console.error('enrollFree error:', e);
-    showToast('Enrollment failed — check your connection and try again','error');
+    showToast('Enrollment failed: ' + (e.message || 'check your connection and try again'),'error');
   }
+  finally { setBtnLoading(btn, false); }
 }
 
 window.closePayModal = function() {
   document.getElementById('pay-modal').classList.remove('open');
 };
 
-window.payEnroll = async function(courseId, courseName, price) {
+window.payEnroll = async function(courseId, courseName, price, btn) {
   const ctx = window._payContext || {};
   const tutorPay = ctx.tutorPay || {};
   const txRef = `frntcoda-enroll-${courseId}-${Date.now()}`;
   const customer = { email: currentProfile.email||currentUser.email, name: currentProfile.fullName||'Student' };
 
+  setBtnLoading(btn, true, 'Loading payment…');
   try {
     await loadPaystack();
   } catch(e) {
     showToast('Payment could not start — check your internet and try again','error');
+    setBtnLoading(btn, false);
     return;
   }
   closePayModal();
+  setBtnLoading(btn, false);
 
   const psConfig = {
     key: window.PAYSTACK_PUBLIC_KEY || 'pk_live_8e7dbbb76eeea4b811995e104fd8535a73004cd1',
@@ -2280,23 +2323,31 @@ window.payEnroll = async function(courseId, courseName, price) {
       // Plain function wrapper — Paystack v1 rejects async callbacks
       (async function() {
         if (res.status === 'success') {
-          const verified = await fetch('/api/payments/verify', {
-            method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('frntcoda_token')},
-            body: JSON.stringify({ reference: res.reference, courseId, type:'enrollment' })
-          });
-          const verification = await verified.json();
-          if(!verified.ok) throw new Error(verification.error || 'Payment verification failed');
-          const newEnrollment = verification.enrollment;
-          const tutorShare = Math.round(price * 0.915);
-          if (tutorPay.uid) {
-            await addDoc(collection(db,'notifications'), {
-              userId: tutorPay.uid, title: '💰 New Course Sale!',
-              body: `${customer.name} enrolled in "${courseName}". Your share of ₦${tutorShare.toLocaleString()} has been recorded.`,
-              read:false, createdAt:serverTimestamp()
+          try {
+            const verified = await fetch('/api/payments/verify', {
+              method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('frntcoda_token')},
+              body: JSON.stringify({ reference: res.reference, courseId, type:'enrollment' })
             });
-            await sendPaymentEmail({ tutorEmail:tutorPay.email, tutorName:tutorPay.fullName || tutorPay.firstName, studentName:customer.name, courseName, amount:price, tutorShare, platformFee:Math.round(price*.085), paymentType:'Course Enrollment', courseId });
+            const verification = await verified.json();
+            if(!verified.ok) throw new Error(verification.error || 'Payment verification failed');
+            const newEnrollment = verification.enrollment;
+            const tutorShare = Math.round(price * 0.915);
+            if (tutorPay.uid) {
+              await addDoc(collection(db,'notifications'), {
+                userId: tutorPay.uid, title: '💰 New Course Sale!',
+                body: `${customer.name} enrolled in "${courseName}". Your share of ₦${tutorShare.toLocaleString()} has been recorded.`,
+                read:false, createdAt:serverTimestamp()
+              });
+              await sendPaymentEmail({ tutorEmail:tutorPay.email, tutorName:tutorPay.fullName || tutorPay.firstName, studentName:customer.name, courseName, amount:price, tutorShare, platformFee:Math.round(price*.085), paymentType:'Course Enrollment', courseId });
+            }
+            enrollments = enrollments.filter(e=>e.courseId!==courseId || e.status!=='active').concat([newEnrollment]);
+            showToast(`Enrolled in ${courseName}! 🎉`,'success');
+            loadMyCourses();
+            loadBrowse();
+          } catch(e) {
+            console.error('Post-payment enrollment error:', e);
+            showToast('Payment succeeded but enrollment could not be confirmed — contact support with reference '+res.reference,'error');
           }
-          enrollments = enrollments.filter(e=>e.courseId!==courseId || e.status!=='active').concat([newEnrollment]);
         }
       })();
     },
@@ -2324,7 +2375,9 @@ window.payEnroll = async function(courseId, courseName, price) {
 // Certificate is auto-issued when the course hits 100% via autoIssueCert().
 // checkCertificate is called from the "Get Certificate" button on completed course cards.
 // If cert is paid/free → go to certs panel. If locked → show pay prompt then go to panel.
-window.checkCertificate = async function(courseId, courseName, certFee) {
+window.checkCertificate = async function(courseId, courseName, certFee, btn) {
+  setBtnLoading(btn, true, 'Loading…');
+  try {
   // Ensure cert exists (auto-issue if not yet created)
   if (!certs.find(c => c.courseId === courseId)) {
     await autoIssueCert(courseId);
@@ -2338,11 +2391,14 @@ window.checkCertificate = async function(courseId, courseName, certFee) {
     showToast('Payment required to unlock your certificate <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>', 'error');
     showPanel('certificates');
   }
+  } catch(e) { showToast('Something went wrong — try again','error'); }
+  finally { setBtnLoading(btn, false); }
 };
 
 // payCert is called from the locked cert overlay — pays the fee, then marks
 // the existing cert as paid:true / locked:false in MongoDB.
-window.payCert = async function(courseId, courseName, certFee) {
+window.payCert = async function(courseId, courseName, certFee, btn) {
+  setBtnLoading(btn, true, 'Loading…');
   const courseSnap = await getDoc(doc(db,'courses',courseId));
   const tutorId = courseSnap.exists() ? courseSnap.data().tutorId : null;
   let tutorPay = {};
@@ -2355,9 +2411,11 @@ window.payCert = async function(courseId, courseName, certFee) {
     await loadPaystack();
   } catch(e) {
     showToast('Payment could not start — check your internet and try again','error');
+    setBtnLoading(btn, false);
     return;
   }
   closePayModal();
+  setBtnLoading(btn, false);
   const psConfig = {
     key: window.PAYSTACK_PUBLIC_KEY || 'pk_live_8e7dbbb76eeea4b811995e104fd8535a73004cd1',
     email: customer.email,
@@ -2527,6 +2585,8 @@ function ytEmbed(url) {
 }
 
 function markdownToHTML(md) {
+  const COLORS = { blue:'var(--blue-glow)', red:'var(--red-bright)', green:'var(--green)', amber:'var(--amber)' };
+  const SIZES  = { sm:'.8em', md:'1em', lg:'1.25em', xl:'1.55em' };
   return md
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>')
@@ -2534,7 +2594,25 @@ function markdownToHTML(md) {
     .replace(/^### (.+)$/gm,'<h3>$1</h3>')
     .replace(/^## (.+)$/gm,'<h3>$1</h3>')
     .replace(/^# (.+)$/gm,'<h3>$1</h3>')
+    // Links: [text](https://url) — escaped entities in the URL (e.g. &amp;) are put back first
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) => {
+      const safeUrl = url.replace(/&amp;/g,'&').replace(/"/g,'%22');
+      const isHttp = /^https?:\/\//i.test(safeUrl.trim());
+      if (!isHttp) return text; // drop non-http(s) links (javascript:, data:, etc.)
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--blue-glow);text-decoration:underline;">${text}</a>`;
+    })
+    // Color: {color:blue}text{/color} — allowlisted names only
+    .replace(/\{color:(\w+)\}([\s\S]*?)\{\/color\}/g, (m, name, text) => {
+      const c = COLORS[name];
+      return c ? `<span style="color:${c};">${text}</span>` : text;
+    })
+    // Size: {size:lg}text{/size} — allowlisted names only
+    .replace(/\{size:(\w+)\}([\s\S]*?)\{\/size\}/g, (m, name, text) => {
+      const s = SIZES[name];
+      return s ? `<span style="font-size:${s};">${text}</span>` : text;
+    })
     .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g,'<em>$1</em>')
     .replace(/\n\n/g,'</p><p>')
     .replace(/\n/g,'<br>');
 }

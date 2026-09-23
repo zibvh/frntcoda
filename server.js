@@ -49,7 +49,11 @@ async function auth(req,res,next){
   const decoded=await adminSdk.auth().verifyIdToken(h.slice(7));
   let user=await User.findById(decoded.uid);
   if(!user&&decoded.email) user=await User.findOne({email:String(decoded.email).toLowerCase()});
-  req.auth={uid:decoded.uid,email:decoded.email,role:user?.role||'student'};
+  // Safety net: if this login's email matches the configured admin email exactly,
+  // always treat as admin even if the Mongo user record's role field is stale/missing.
+  const isConfiguredAdmin = !!(process.env.ADMIN_EMAIL && decoded.email &&
+    String(decoded.email).trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase());
+  req.auth={uid:decoded.uid,email:decoded.email,role: isConfiguredAdmin ? 'admin' : (user?.role||'student')};
   req.firebaseUser=decoded; next();
  }catch(e){return res.status(401).json({error:'Invalid or expired Firebase session'});}
 }
@@ -64,7 +68,9 @@ async function optionalAuth(req){
     const decoded=await adminSdk.auth().verifyIdToken(h.slice(7));
     let user=await User.findById(decoded.uid);
     if(!user&&decoded.email) user=await User.findOne({email:String(decoded.email).toLowerCase()});
-    return {uid:decoded.uid,email:decoded.email,role:user?.role||'student'};
+    const isConfiguredAdmin = !!(process.env.ADMIN_EMAIL && decoded.email &&
+      String(decoded.email).trim().toLowerCase() === process.env.ADMIN_EMAIL.trim().toLowerCase());
+    return {uid:decoded.uid,email:decoded.email,role: isConfiguredAdmin ? 'admin' : (user?.role||'student')};
   }catch(e){ return null; }
 }
 function toMongoId(id){ return id; }
@@ -280,7 +286,17 @@ app.get('*',(req,res)=>{if(req.path.startsWith('/api/'))return res.status(404).j
 mongoose.connect(process.env.MONGODB_URI||'mongodb://127.0.0.1:27017/frntcoda').then(async()=>{
   if(process.env.ADMIN_EMAIL&&process.env.ADMIN_PASSWORD){
     const email=process.env.ADMIN_EMAIL.trim().toLowerCase();
-    if(!await User.findOne({email})){const password=await bcrypt.hash(process.env.ADMIN_PASSWORD,12);await User.create({email,password,fullName:process.env.ADMIN_NAME||'Administrator',role:'admin',status:'active',isVerified:true,emailVerified:true,createdAt:new Date()});console.log('Bootstrap admin created:',email);}
+    if(!await User.findOne({email})){
+      const password=await bcrypt.hash(process.env.ADMIN_PASSWORD,12);
+      let adminId; // prefer the real Firebase UID so req.auth lookups match by _id directly
+      if(firebaseAdminReady){
+        try{ adminId=(await adminSdk.auth().getUserByEmail(email)).uid; }catch(e){ /* no Firebase account yet — falls back to a generated _id below */ }
+      }
+      const doc={email,password,fullName:process.env.ADMIN_NAME||'Administrator',role:'admin',status:'active',isVerified:true,emailVerified:true,createdAt:new Date()};
+      if(adminId) doc._id=adminId;
+      await User.create(doc);
+      console.log('Bootstrap admin created:',email, adminId?'(linked to Firebase UID)':'(no matching Firebase account found yet — will still work via email match)');
+    }
   }
   app.listen(PORT,()=>console.log(`frNtcOda running on http://localhost:${PORT}`));
 }).catch(e=>{console.error('MongoDB connection failed:',e.message);process.exit(1);});
