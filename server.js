@@ -124,8 +124,19 @@ function canReadCollection(col,req,doc){
 }
 function canWrite(col,req,data,existing){
   if(req.auth.role==='admin') return true;
-  if(col==='users') return existing && String(existing._id)===req.auth.uid;
+  if(col==='users') return existing && (String(existing._id)===req.auth.uid || String(existing.uid||'')===req.auth.uid);
   if(col==='courses') return existing ? String(existing.tutorId)===req.auth.uid : String(data.tutorId)===req.auth.uid;
+
+  // Enrollments have existed in a few schema versions. Some older records
+  // use `studentId`, while others use `uid` or `userId`. Read access already
+  // supports all three, so writes/deletes must use the exact same ownership
+  // rule or a student can open an enrollment but can never save/remove it.
+  if(col==='enrollments'){
+    const record=existing||data||{};
+    return [record.studentId,record.uid,record.userId]
+      .some(v => v != null && String(v)===req.auth.uid);
+  }
+
   const owner=ownerFields[col];
   if(owner) return String((existing||data)[owner])===req.auth.uid;
   if(col==='notifications') return req.auth.role==='tutor' || req.auth.role==='admin';

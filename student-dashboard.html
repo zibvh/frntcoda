@@ -1568,7 +1568,7 @@ window.openCourse = async function(courseId, enrollmentId) {
       '<div style="text-align:center;padding:2.5rem 1rem;font-family:var(--mono);font-size:.75rem;color:var(--gray);">Loading course…<br><div class="spin" style="margin:.75rem auto 0;width:22px;height:22px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--blue-glow);border-radius:50%;animation:spin .7s linear infinite;"></div></div>';
 
     activeLessons = course.lessons || [];
-    const completedIds = new Set(enrollment.completedLessons || []);
+    const completedIds = new Set((Array.isArray(enrollment.completedLessons) ? enrollment.completedLessons : []).map(v => String(v)));
 
     document.getElementById('lv-course-title').textContent = course.title;
     const done = completedIds.size;
@@ -1622,7 +1622,7 @@ window.setActiveLesson = async function(idx, enrollmentId, courseId) {
   const course = cSnap.exists() ? cSnap.data() : {};
   const enSnap = await getDoc(doc(db,'enrollments',enrollmentId));
   const enrollment = enSnap.exists() ? enSnap.data() : {};
-  const completedIds = new Set(enrollment.completedLessons || []);
+  const completedIds = new Set((Array.isArray(enrollment.completedLessons) ? enrollment.completedLessons : []).map(v => String(v)));
   renderLessonList(completedIds, enrollmentId, courseId);
   renderLessonContent(idx, enrollmentId, completedIds, course);
   document.getElementById('main-scroll').scrollTo({top: document.getElementById('lv-content-area').offsetTop - 80, behavior:'smooth'});
@@ -1726,7 +1726,10 @@ window.markLessonDone = async function(idx, enrollmentId, courseId, btn) {
     }
   } catch(e) {
     console.error('markLessonDone error:', e);
-    showToast('Could not save progress — check your connection','error');
+    showToast(`Could not save progress: ${e.message || 'check your connection'}`,'error');
+    // IMPORTANT: callers (assignment/test/exam) must not continue and display
+    // “marked complete” when the MongoDB write actually failed.
+    throw e;
   } finally {
     setBtnLoading(btn, false);
   }
@@ -2577,34 +2580,35 @@ async function updateStreakToday() {
 // Certificate is created immediately when the course hits 100%.
 // If certFee > 0, it is marked locked=true until the student pays.
 async function autoIssueCert(courseId) {
-  try {
-    // Don't duplicate
-    if (certs.find(c => c.courseId === courseId)) return;
-    const cSnap = await getDoc(doc(db, 'courses', courseId));
-    if (!cSnap.exists()) return;
-    const course = cSnap.data();
-    const certFee = course.certFee || 0;
-    const certId  = `FNT-${courseId.slice(0,4).toUpperCase()}-${Date.now()}`;
-    const locked  = certFee > 0;
+  // Don't duplicate. Return the existing certificate so callers can verify it.
+  const existing = certs.find(c => String(c.courseId) === String(courseId));
+  if (existing) return existing;
 
-    await setDoc(doc(db, 'certificates', certId), {
-      certId,
-      studentId:   currentUser.uid,
-      studentName: currentProfile.fullName || 'Student',
-      tutorName:   course.tutorName || 'frNtcOda Instructor',
-      courseId,
-      courseName:  course.title,
-      certFee,
-      locked,
-      paid:        !locked,
-      issuedAt:    serverTimestamp()
-    });
+  const cSnap = await getDoc(doc(db, 'courses', courseId));
+  if (!cSnap.exists()) throw new Error('Course not found while creating certificate');
 
-    certs.push({ certId, courseId, courseName: course.title, certFee, locked, paid: !locked });
-    console.log('[frNtcOda] Certificate auto-issued:', certId, locked ? '(locked — payment needed)' : '(free — unlocked)');
-  } catch(e) {
-    console.log('[frNtcOda] autoIssueCert failed:', e.message);
-  }
+  const course = cSnap.data();
+  const certFee = Number(course.certFee || 0);
+  const certId  = `FNT-${String(courseId).slice(0,4).toUpperCase()}-${Date.now()}`;
+  const locked  = certFee > 0;
+
+  await setDoc(doc(db, 'certificates', certId), {
+    certId,
+    studentId:   currentUser.uid,
+    studentName: currentProfile.fullName || 'Student',
+    tutorName:   course.tutorName || 'frNtcOda Instructor',
+    courseId,
+    courseName:  course.title,
+    certFee,
+    locked,
+    paid:        !locked,
+    issuedAt:    serverTimestamp()
+  });
+
+  const created = { certId, courseId, courseName: course.title, certFee, locked, paid: !locked };
+  certs.push(created);
+  console.log('[frNtcOda] Certificate auto-issued:', certId, locked ? '(locked — payment needed)' : '(free — unlocked)');
+  return created;
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────
