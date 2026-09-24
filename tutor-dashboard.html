@@ -2715,6 +2715,7 @@ window.confirmDeleteCourse = async function(btn) {
       await deleteDoc(doc(db,'courses',courseId));
     } catch(delErr) {
       // Hard delete failed (e.g. admin-only rule) — soft delete instead
+      console.error('[frNtcOda] Hard delete failed, falling back to soft delete:', delErr.message||delErr);
       await updateDoc(doc(db,'courses',courseId),{status:'deleted',deletedAt:serverTimestamp()});
     }
     // Remove from DOM and memory
