@@ -133,8 +133,18 @@ function canWrite(col,req,data,existing){
   // rule or a student can open an enrollment but can never save/remove it.
   if(col==='enrollments'){
     const record=existing||data||{};
-    return [record.studentId,record.uid,record.userId]
-      .some(v => v != null && String(v)===req.auth.uid);
+    const authUid=String(req.auth?.uid||'').trim();
+    const authEmail=String(req.auth?.email||'').trim().toLowerCase();
+
+    // Enrollments exist in a few schema versions. Some older records store
+    // the Firebase UID, while legacy records may store an email address.
+    const ownsById=[record.studentId,record.uid,record.userId]
+      .some(v => v != null && String(v).trim()===authUid);
+
+    const ownsByEmail=[record.studentEmail,record.email]
+      .some(v => v != null && String(v).trim().toLowerCase()===authEmail);
+
+    return ownsById || (authEmail && ownsByEmail);
   }
 
   const owner=ownerFields[col];
